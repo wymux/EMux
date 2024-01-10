@@ -25,15 +25,24 @@
 
 (wymux/load-bin "exwm")
 
+(wymux/load-lib "abbrev")
 (wymux/load-lib "backup")
-(wymux/load-lib "mode")
-(wymux/load-lib "exwm")
-(wymux/load-lib "recentf")
-(wymux/load-lib "vertico")
-(wymux/load-lib "keybind")
 (wymux/load-lib "dired")
-(wymux/load-lib "tree-sitter")
+(wymux/load-lib "display")
+(wymux/load-lib "eat")
+(wymux/load-lib "emms")
 (wymux/load-lib "eshell")
+(wymux/load-lib "exwm")
+(wymux/load-lib "ggtags")
+(wymux/load-lib "gnus")
+(wymux/load-lib "hotfuzz")
+(wymux/load-lib "keybind")
+(wymux/load-lib "mh")
+(wymux/load-lib "mode")
+(wymux/load-lib "recentf")
+(wymux/load-lib "register")
+(wymux/load-lib "tree-sitter")
+(wymux/load-lib "vertico")
 
 (defun backward-whitespace ()
   ""
@@ -48,11 +57,6 @@
 
 (customize-set-variable 'use-short-answers t)
 
-(wymux/load-lib "abbrev")
-(wymux/load-lib "mh")
-(wymux/load-lib "emms")
-(wymux/load-lib "register")
-(wymux/load-lib "display")
 
 (defun wymux/create-unavailable-dir ()
   ""
@@ -69,11 +73,6 @@
 	(find-alternate-file (concat "/doas::" file)))))
 
 (add-to-list 'find-file-hook 'wymux/elevate-permission)
-
-(wymux/load-lib "gnus")
-(wymux/load-lib "ggtags")
-(wymux/load-lib "eat")
-(wymux/load-lib "hotfuzz")
 
 (customize-set-variable 'c-default-style "linux")
 
