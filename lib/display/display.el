@@ -44,3 +44,6 @@
 (customize-set-variable 'minibuffer-frame-alist '((minibuffer . only)))
 
 (customize-set-variable 'cursor-type 'bar)
+
+(require 'flymake)
+(set-face-attribute 'flymake-error nil :underline 'nil)
