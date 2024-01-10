@@ -1,0 +1,5 @@
+(customize-set-variable 'backup-directory-alist '(("." . "~/Media/Document/Archive/Emacs/Edit")))
+(customize-set-variable 'delete-old-versions t)
+(customize-set-variable 'version-control t)
+(customize-set-variable 'kept-new-versions 20)
+(customize-set-variable 'kept-old-versions 20)

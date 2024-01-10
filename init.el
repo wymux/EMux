@@ -1,6 +1,7 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
 (package-initialize)
 (defvar wymux-emacs-package-dir "~/Internet/Git/Emacs/")
 (defvar wymux-bin-dir (concat user-emacs-directory "bin/"))
@@ -32,12 +33,10 @@
 (wymux/load-lib "keybind")
 (wymux/load-lib "shift-number")
 (wymux/load-lib "avy")
-;;(wymux/load-lib "embark")
 (wymux/load-lib "dired")
 (wymux/load-lib "tree-sitter")
 (wymux/load-lib "eshell")
 (wymux/load-lib "org")
-;; (wymux/load-lib "god")
 
 (defun backward-whitespace ()
   ""
@@ -57,8 +56,6 @@
 (wymux/load-lib "emms")
 (wymux/load-lib "register")
 (wymux/load-lib "display")
-;;(wymux/load-lib "eglot-java")
-(wymux/load-lib "binky")
 
 (defun wymux/create-unavailable-dir ()
   ""
@@ -109,8 +106,6 @@
   ""
   (interactive)
   (kill-word -1))
-
-(wymux/load-lib "wymux-keys")
 
 (define-skeleton wymux-makefile-c
   ""
@@ -231,18 +226,6 @@
 (require 'w3m-load)
 (require 'mime-w3m)
 
-;;(r equire 'lsp-bridge)
-;;(global-lsp-bridge-mode)
-
-(customize-set-variable 'lsp-bridge-enable-completion-in-minibuffer t)
-(customize-set-variable 'acm-backend-lsp-candidate-min-length 3)
-(customize-set-variable 'acm-backend-yas-candidate-min-length 3)
-(customize-set-variable 'acm-backend-search-file-words-max-number 4)
-(customize-set-variable 'acm-candidate-match-function 'hotfuzz)
-(customize-set-variable 'acm-enable-quick-access t)
-
-;;(customize-set-variable 'lsp-bridge-complete-manually t)
-
 (defun wymux/indent-buffer ()
   ""
   (interactive)
@@ -253,28 +236,31 @@
 (add-to-list 'load-path "~/Internet/Git/Emacs/emmet2-mode")
 (require 'emmet2-mode)
 (require 'eacl)
-;;(require 'lsp-java)
 
-;; (add-to-list 'load-path "/home/wymux/Internet/Git/Emacs/emacs-application-framework")
-;; (load-file "/home/wymux/Internet/Git/Emacs/emacs-application-framework/app/browser/eaf-browser.el")
-;; (require 'eaf)
-;; (require 'eaf-browser)
-;;(add-to-list 'load-path "/home/wymux/Internet/Git/Emacs/prettier.el")
 (require 'prettier)
 (add-hook 'html-mode-hook 'prettier-mode)
-
+(add-hook 'css-mode-hook 'prettier-mode)
+(add-hook 'js-mode-hook 'prettier-mode)
+ 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(company lsp-java surround prettier websocket emacs-w3m "compat" compat "compat" magit "magit"))
- '(package-vc-selected-packages
-   '((lsp-java :vc-backend Git :url "https://github.com/emacs-lsp/lsp-java.git"))))
+   '(json-rpc surround prettier websocket "compat" compat "compat" magit "magit")))
+ 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+ (customize-set-variable 'enable-recursive-minibuffers t)
+ (customize-set-variable 'completion-ignore-case t)
+ (customize-set-variable 'read-file-name-completion-ignore-case t)
+ (customize-set-variable 'read-buffer-completion-ignore-case t)
+
+ (require 'flymake)
+ (set-face-attribute 'flymake-error nil :underline 'nil)
