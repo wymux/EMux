@@ -31,8 +31,6 @@
 (wymux/load-lib "recentf")
 (wymux/load-lib "vertico")
 (wymux/load-lib "keybind")
-(wymux/load-lib "shift-number")
-(wymux/load-lib "avy")
 (wymux/load-lib "dired")
 (wymux/load-lib "tree-sitter")
 (wymux/load-lib "eshell")
