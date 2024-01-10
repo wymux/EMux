@@ -47,3 +47,5 @@
 
 (require 'flymake)
 (set-face-attribute 'flymake-error nil :underline 'nil)
+
+(setq-default mode-line-format " %b")
