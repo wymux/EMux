@@ -77,4 +77,5 @@
 			'(((member exwm-class-name '("*Minecraft\\*" "llpp"))
 			   char-mode t)))
 
-(setq exwm-workspace-minibuffer-position 'top)
+(customize-set-variable 'exwm-workspace-minibuffer-position 'nil)
+(customize-set-variable 'exwm-workspace-display-echo-area-timeout '1)

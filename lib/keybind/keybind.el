@@ -16,6 +16,4 @@
 (keymap-global-set "C-c \\" 'eacl-complete-line)
 (keymap-global-set "M-z" 'zap-to-char)
 
-(keymap-global-set "C-c g g" 'lsp-bridge-code-action)
-(keymap-global-set "M-j" 'embark-act)
-(keymap-global-set "M-o" 'surround-insert)
+(keymap-global-set "M-o" 'wymux/transpose-line-other-buffer)

@@ -39,38 +39,16 @@
 (wymux/load-lib "keybind")
 (wymux/load-lib "mh")
 (wymux/load-lib "mode")
+(wymux/load-lib "hexrgb")
+(wymux/load-lib "oneonone")
 (wymux/load-lib "recentf")
 (wymux/load-lib "register")
 (wymux/load-lib "tree-sitter")
 (wymux/load-lib "vertico")
 
-(defun backward-whitespace ()
-  ""
-  (interactive)
-  (forward-whitespace -1))
-
-(defun wymux/recentf-find ()
-  ""
-  (interactive)
-  (let ((c (completing-read "File: " recentf-list)))
-    (find-file c)))
-
 (customize-set-variable 'use-short-answers t)
 
-
-(defun wymux/create-unavailable-dir ()
-  ""
-  (let ((dir (file-name-directory buffer-file-name)))
-    (unless (file-exists-p dir)
-      (make-directory dir t))))
-
 (add-to-list 'find-file-not-found-functions 'wymux/create-unavailable-dir)
-
-(defun wymux/elevate-permission ()
-  ""
-  (let ((file (buffer-file-name)))
-    (if (not (file-writable-p file))
-	(find-alternate-file (concat "/doas::" file)))))
 
 (add-to-list 'find-file-hook 'wymux/elevate-permission)
 
@@ -78,30 +56,12 @@
 
 (customize-set-variable 'require-final-newline t)
 
-(defun wymux/go-fmt ()
-  ""
-  (interactive)
-  (shell-command (concat "gofmt -w " (buffer-file-name)))
-  (revert-buffer nil t))
-
 (customize-set-variable 'disabled-command-function nil)
 (customize-set-variable 'sentence-end-double-space 'nil)
 
 (customize-set-variable 'eshell-scroll-show-maximum-output t)
 
-(defun wymux/copy-filename-as-kill (&optional arg)
-  ""
-  (interactive)
-  (if (eq arg 1)
-      (kill-new (replace-regexp-in-string "\/home\/wymux" "~" (buffer-file-name)))
-    (kill-new (buffer-file-name))))
-
 (defalias 'list-buffers 'ibuffer)
-
-(defun kill-backward-word ()
-  ""
-  (interactive)
-  (kill-word -1))
 
 (define-skeleton wymux-makefile-c
   ""
@@ -117,104 +77,38 @@
 (customize-set-variable 'compilation-always-kill t)
 (customize-set-variable 'compilation-auto-jump-to-first-error t)
 
-(defun wymux/find-all ()
-  ""
-  (interactive)
-  (let ((flist
-	 (with-temp-buffer
-	   (insert-file-contents "~/.cache/all.txt")
-	   (split-string (buffer-string) "\n" t))))
-    (find-file (completing-read "File: " flist))))
 
-(defun wymux/kill-file (f)
-  ""
-  (interactive "fFile:")
-  (with-temp-buffer
-    (insert-file-contents f)
-    (kill-new
-     (buffer-string))))
 
-(defun wymux/file-to-pdf ()
-  ""
-  (interactive)
-  (let ((f (dired-get-filename nil t)))
-    (shell-command (concat "libreoffice --headless --convert-to pdf " (shell-quote-argument f))))
-  (revert-buffer))
 
-(defun wymux/extract-zip ()
-  ""
-  (interactive)
-  (let ((f (dired-get-filename nil t)))
-    (shell-command (concat "unzip " (shell-quote-argument f)))
-    (revert-buffer)))
+
+
+
+
 
 (add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
 (load-file "~/Internet/Git/Utility/hop.el/hop.el")
 
 (customize-set-variable 'next-line-add-newlines nil)
 
-(defun wymux/date ()
-  ""
-  (interactive)
-  (message (format-time-string "%H:%M")))
 
-(defun wymux/adjust-number ()
-  ""
-  (interactive)
-  (skip-chars-backward "0-9")
-  (or (looking-at "[0-9]+")
-      (error "No number at point"))
-  (replace-match (number-to-string (1+ (string-to-number (match-string 0))))))
 
-(defun wymux/shift-number (n)
-  ""
-  (let ((old-pos (point)))
-    (or (re-search-forward (rx (group (one-or-more num))) (line-end-position) t)
-	(error "No number of the current line"))
-    (let* ((beg		(match-beginning 1))
-	   (end		(match-end	 1))
-	   (old-num-str (buffer-substring-no-properties beg end))
-	   (old-num	(string-to-number old-num-str))
-	   (new-num	(+ old-num n))
-	   (new-num-str (number-to-string new-num)))
-      (delete-region beg end)
-      (when (string-match-p "\\`0" old-num-str)
-	(let ((len-diff (- (length old-num-str)
-			   (length new-num-str))))
-	  (when (> len-diff 0)
-	    (insert (make-string len-diff ?0)))))
-      (insert new-num-str)
-      (goto-char old-pos))))
 
-(defun wymux/shift-number-up ()
-  (interactive)
-  (wymux/shift-number 1))
 
-(defun wymux/shift-number-down ()
-  (interactive)
-  (wymux/shift-number -1))
 
-(defun wymux/insert-precise-time ()
-  (interactive)
-  (insert (concat (format-time-string "%H:%M:%S") " UTC")))
 
-(defun wymux/insert-precise-date ()
-  (interactive)
-  (insert (format-time-string "%Y %d %B ")))
 
-(defun wymux/insert-precise-date-time ()
-  (interactive)
-  (wymux/insert-precise-time)
-  (insert " ")
-  (wymux/insert-precise-date))
+
+
+
+
+
+
+
+
 
 (put 'dired-find-alternate-file 'disabled nil)
 (setq dired-kill-when-opening-new-dired-buffer 1)
-(defun wymux/video ()
-  (interactive)
-  (let ((v (expand-file-name
-	    (completing-read "Video: " (directory-files-recursively "~/Media/Video" "")))))
-    (start-process "Mpv" nil "mpv" " " v)))
+
 
 (customize-set-variable 'undo-outer-limit 10000000000)
 
@@ -222,10 +116,7 @@
 (require 'w3m-load)
 (require 'mime-w3m)
 
-(defun wymux/indent-buffer ()
-  ""
-  (interactive)
-  (indent-region (point-min) (point-max)))
+
 
 (add-to-list 'load-path "~/Internet/Git/Emacs/eacl")
 (add-to-list 'load-path "~/Internet/Git/Emacs/deno-bridge")
@@ -237,15 +128,15 @@
 (add-hook 'html-mode-hook 'prettier-mode)
 (add-hook 'css-mode-hook 'prettier-mode)
 (add-hook 'js-mode-hook 'prettier-mode)
- 
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(json-rpc surround prettier websocket "compat" compat "compat" magit "magit")))
- 
+   '(json-rpc prettier websocket "compat" compat "compat" magit "magit")))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -253,10 +144,10 @@
  ;; If there is more than one, they won't work right.
  )
 
- (customize-set-variable 'enable-recursive-minibuffers t)
- (customize-set-variable 'completion-ignore-case t)
- (customize-set-variable 'read-file-name-completion-ignore-case t)
- (customize-set-variable 'read-buffer-completion-ignore-case t)
+(customize-set-variable 'enable-recursive-minibuffers t)
+(customize-set-variable 'completion-ignore-case t)
+(customize-set-variable 'read-file-name-completion-ignore-case t)
+(customize-set-variable 'read-buffer-completion-ignore-case t)
 
- (require 'flymake)
- (set-face-attribute 'flymake-error nil :underline 'nil)
+(require 'flymake)
+(set-face-attribute 'flymake-error nil :underline 'nil)

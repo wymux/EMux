@@ -40,3 +40,7 @@
 (customize-set-variable 'window-divider-default-right-width 2)
 (customize-set-variable 'window-divider-default-bottom-width 2)
 (customize-set-variable 'window-divider-default-places t)
+(setq-default mode-line-format " %b")
+(customize-set-variable 'minibuffer-frame-alist '((minibuffer . only)))
+
+(customize-set-variable 'cursor-type 'bar)
