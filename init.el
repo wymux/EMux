@@ -1,8 +1,38 @@
+(add-to-list 'load-path "/home/wymux/Internet/Git/Emacs/emacs-w3m")
+(add-to-list 'load-path "~/Internet/Git/Emacs/eacl")
+(add-to-list 'load-path "~/Internet/Git/Emacs/deno-bridge")
+(add-to-list 'load-path "~/Internet/Git/Emacs/emmet2-mode")
+(add-to-list 'load-path "~/Internet/Git/Emacs/prettier.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/emacs-websocket/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/iter2/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/s.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/f.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/editorconfig-emacs/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/nvm.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/with-editor/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/dash.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/transient/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/magit/lisp/")
+
 (require 'package)
+(require 's)
+(require 'f)
+(require 'nvm)
+(require 'editorconfig)
+(require 'prettier)
+(require 'eacl)
+(require 'emmet2-mode)
+(require 'mime-w3m)
+(require 'w3m-load)
+(require 'dash)
+(require 'with-editor)
+(require 'magit)
+
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
 (package-initialize)
+(customize-set-variable 'package-install-upgrade-built-in t)
 (defvar wymux-emacs-package-dir "~/Internet/Git/Emacs/")
 (defvar wymux-bin-dir (concat user-emacs-directory "bin/"))
 (defvar wymux-lib-dir (concat user-emacs-directory "lib/"))
@@ -77,77 +107,23 @@
 (customize-set-variable 'compilation-always-kill t)
 (customize-set-variable 'compilation-auto-jump-to-first-error t)
 
-
-
-
-
-
-
-
-
 (add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
 (load-file "~/Internet/Git/Utility/hop.el/hop.el")
 
 (customize-set-variable 'next-line-add-newlines nil)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (put 'dired-find-alternate-file 'disabled nil)
 (setq dired-kill-when-opening-new-dired-buffer 1)
 
-
 (customize-set-variable 'undo-outer-limit 10000000000)
 
-(add-to-list 'load-path "/home/wymux/Internet/Git/Emacs/emacs-w3m")
-(require 'w3m-load)
-(require 'mime-w3m)
 
-
-
-(add-to-list 'load-path "~/Internet/Git/Emacs/eacl")
-(add-to-list 'load-path "~/Internet/Git/Emacs/deno-bridge")
-(add-to-list 'load-path "~/Internet/Git/Emacs/emmet2-mode")
-(require 'emmet2-mode)
-(require 'eacl)
-
-(require 'prettier)
 (add-hook 'html-mode-hook 'prettier-mode)
 (add-hook 'css-mode-hook 'prettier-mode)
 (add-hook 'js-mode-hook 'prettier-mode)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(json-rpc prettier websocket "compat" compat "compat" magit "magit")))
-
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
 
 (customize-set-variable 'enable-recursive-minibuffers t)
 (customize-set-variable 'completion-ignore-case t)
 (customize-set-variable 'read-file-name-completion-ignore-case t)
 (customize-set-variable 'read-buffer-completion-ignore-case t)
 
-(require 'flymake)
-(set-face-attribute 'flymake-error nil :underline 'nil)
