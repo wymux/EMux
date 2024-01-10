@@ -34,7 +34,6 @@
 (wymux/load-lib "dired")
 (wymux/load-lib "tree-sitter")
 (wymux/load-lib "eshell")
-(wymux/load-lib "org")
 
 (defun backward-whitespace ()
   ""
