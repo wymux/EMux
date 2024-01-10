@@ -17,3 +17,9 @@
 (keymap-global-set "M-z" 'zap-to-char)
 
 (keymap-global-set "M-o" 'wymux/transpose-line-other-buffer)
+(keymap-global-set "M-[" 'backward-paragraph)
+(keymap-global-set "M-]" 'forward-paragraph)
+(keymap-global-set "M-<backspace>" 'kill-whole-line)
+(keymap-global-set "M--" 'beginning-of-buffer)
+(keymap-global-set "M-=" 'end-of-buffer)
+(keymap-global-set "M-s s" 'duplicate-dwim)
