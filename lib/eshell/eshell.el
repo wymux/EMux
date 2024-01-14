@@ -1,6 +1,0 @@
-(customize-set-variable 'eshell-history-size 8192)
-(require 'em-smart)
-(customize-set-variable 'eshell-review-quick-commands nil)
-(customize-set-variable 'eshell-smart-space-goes-to-end t)
-(customize-set-variable 'eshell-list-files-after-cd t)
-(customize-set-variable 'eshell-scroll-show-maximum-output t)
