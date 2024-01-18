@@ -17,15 +17,15 @@
 (defun wymux/select-theme ()
   ""
   (let ((time-now (string-to-number (format-time-string "%H"))))
-    (if (>= time-now 4)
-	(wymux/bright-theme)
-      (wymux/dark-theme))))
+    (if (or (>= time-now 4)
+	     (<= 22 time-now))
+	(wymux/dark-theme)
+      (wymux/bright-theme))))
 
 (wymux/select-theme)
 
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
-(fido-mode 1)
 (customize-set-variable 'inhibit-splash-screen t)
 (add-to-list 'load-path "~/Internet/Git/Emacs/xelb-2")
 (add-to-list 'load-path "~/Internet/Git/Emacs/exwm-2")
@@ -105,6 +105,43 @@
   (let ((basestr "(customize-set-variable \'")
 	(var (symbol-name (read-variable "Customize: "))))
     (insert (concat basestr var " nil" ")" "\n"))))
+
+(setq-default abbrev-mode t)
+
+(require 'eshell)
+(defun wymux/eshell-ug ()
+  ""
+  (interactive)
+  (insert "cd ~/Internet/Git/")
+  (eshell-send-input))
+
+(defun wymux/eshell-umx ()
+  ""
+  (interactive)
+  (insert "cd ~/Internet/Git/Exherbo/")
+  (eshell-send-input))
+
+(defun wymux/eshell-um ()
+  ""
+  (interactive)
+  (insert "cd ~/Media/Musica")
+  (eshell-send-input))
+
+(defun wymux/eshell-ugp ()
+  ""
+  (interactive)
+  (insert "cd ~/Internet/Git/Project/")
+  (eshell-send-input))
+
+(progn
+  (when (boundp 'eshell-mode-abbrev-table)
+    (clear-abbrev-table eshell-mode-abbrev-table))
+  (define-abbrev-table 'eshell-mode-abbrev-table
+    '(("ug" "" wymux/eshell-ug nil)
+      ("umx" "" wymux/eshell-umx nil)
+      ("um" "" wymux/eshell-um nil)
+      ("ugp" "" wymux/eshell-ugp)
+      ("crx" "" "doas cave resolve -x"))))
 
 (progn
   (when (boundp 'emacs-lisp-mode-abbrev-table)
@@ -195,17 +232,16 @@
   (interactive)
   (forward-whitespace -1))
 
-(defun wymux/emms-play-dir-tree ()
-  ""
-  (interactive)
-  (let ((dir (read-directory-name "Dir: ")))
-    (emms-play-directory-tree dir)))
-
 (defun wymux/emms-play-find ()
   ""
   (interactive)
   (let ((track (read-from-minibuffer "Track: ")))
     (emms-play-find emms-source-file-default-directory track)))
+
+(defun wymux/format-buffer ()
+  ""
+  (interactive)
+  (indent-region (goto-char (point-min)) (goto-char (point-max))))
 
 (load-file "~/Internet/Git/Emacs/modaled/modaled.el")
 
@@ -231,14 +267,20 @@
     ("q" . move-beginning-of-line)
     ("w" . move-end-of-line)
     ("s" . mark-defun)
+    ("b" . duplicate-dwim)
+    ("xo" . wymux/format-buffer)
     ("xf" . find-file)
     ("xr" . recentf-open)
     ("xu" . save-buffer)
     ("\\[" . beginning-of-buffer)
     ("\\]" . end-of-buffer)
     ("\\f" . wymux/emms-play-find)
-    ("\\e" . emms012)
+    ("\\e" . emms)
     ("\\d" . emms-play-directory-tree)
+    ("\\n" . magit)
+    ("\\<backspace>" . compile)
+    ("\\t" . wymux/search-www)
+    ("\\r" . wymux/open-document)
     ("u" . backward-word)
     ("i" . forward-word)
     ("y" . yank)
@@ -284,16 +326,34 @@
   :substates '("dired")
   :bind
   '(("o" . dired-previous-line)
-    ("l" . dired-next-line)))
+    ("l" . dired-next-line)
+    ("m" . dired-create-directory)
+    ("t" . dired-up-directory)
+    ("r" . dired-do-rename)))
 
 (modaled-enable-substate-on-state-change
   "dired"
-  :states '("normal")
+  :states '("insert")
   :major '(dired-mode))
+
+(require 'eglot)
+
+(modaled-define-substate "eglot")
+(modaled-define-keys
+  :substates '("eglot")
+  :bind
+  '((" g" . eglot-code-actions)
+    (" u" . flymake-goto-next-error)))
+
+(modaled-enable-substate-on-state-change
+  "eglot"
+  :states '("normal")
+  :minor '(eglot--managed-mode))
 
 (modaled-define-default-state
   '("insert" dired-mode wdired-mode eshell-mode eat-eshell-mode
-    debugger-mode mh-folder-mode emms-playlist-mode calendar-mode)
+    debugger-mode mh-folder-mode emms-playlist-mode calendar-mode
+    magit-status-mode git-commit-mode backtrace-mode info-mode help-mode)
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
@@ -307,7 +367,7 @@
 (add-to-list 'auto-mode-alist
 	     '("\\.ts?\\'" . typescript-ts-mode))
 
-(add-hook 'typescript-ts-mode 'eglot-ensure)
+(add-hook 'typescript-ts-mode-hook 'eglot-ensure)
 
 (recentf-mode 1)
 
@@ -318,8 +378,8 @@
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (package-initialize)
 
-(add-hook 'typescript-ts-mode-hook 'prettier-js-mode)
-(add-hook 'web-mode-hook 'prettier-js-mode)
+(add-hook 'typescript-ts-mode-hook 'prettier-mode)
+(add-hook 'web-mode-hook 'prettier-mode)
 
 (add-hook 'typescript-ts-mode-hook 'emmet2-mode)
 
@@ -330,6 +390,8 @@
 (load-file "~/Internet/Git/Emacs/emacs-websocket/websocket.el")
 (load-file "~/Internet/Git/Emacs/deno-bridge/deno-bridge.el")
 (load-file "~/Internet/Git/Emacs/emmet2-mode/emmet2-mode.el")
+
+(vertico-mode 1)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -361,7 +423,7 @@
 (setq package-install-upgrade-built-in t)
 (save-place-mode 1)
 
-(customize-set-variable 'eglot-confirm-server-initiated-edits t)
+(customize-set-variable 'eglot-confirm-server-initiated-edits nil)
 
 (defvar wymux-search-websites '((libgen . "https://libgen.li/index.php?req=%s&res=100")))
 
@@ -372,13 +434,17 @@
 		      (replace-regexp-in-string "\s" "+" str)))
 	(website (completing-read "Search Website: " wymux-search-websites))
 	(profile "S2")
-	(new-tab "--new-tab"))
+	(buffer "Firefox-dark")
+	(new-tab "--new-tab")
+	(ch1 (char-to-string (read-char)))
+	(ch2 (char-to-string (read-char))))
     (when (not (get-buffer "firefox-default"))
       (setq new-tab ""))
     (when wymux-light-theme
-      (setq profile "S1"))
-      (message "new-tab: %s, profile: %s" new-tab profile)
-      (start-process "firefox" "firefox" "firefox" "-p" profile new-tab site)))
+      (setq profile "S1"
+	    buffer "Firefox-light"))
+    (message "new-tab: %s, profile: %s" new-tab profile)
+    (start-process "firefox" buffer "firefox" "-p" profile new-tab site)))
 
 (defun wymux/open-document ()
   "View document."
@@ -388,3 +454,24 @@
     (start-process "llpp" "llpp" "llpp"
 		   (expand-file-name
 		    (completing-read "Doc: " (directory-files-recursively dir reg))))))
+
+(customize-set-variable 'exwm-manage-configurations 
+			'(((member exwm-class-name '("firefox-default" "llpp"))
+			   char-mode t)))
+
+(defun wymux/insert-gpl ()
+  ""
+  (interactive)
+  (insert-file-contents "~/Media/Document/Archive/Reference/License/gpl3.txt"))
+
+(customize-set-variable 'c-default-style "linux")
+(customize-set-variable 'read-file-name-completion-ignore-case t)
+(customize-set-variable 'read-buffer-completion-ignore-case t)
+(customize-set-variable 'completion-ignore-case t)
+
+(customize-set-variable 'backup-directory-alist '(("." . "~/Media/Document/Archive/Emacs/Edit")))
+(customize-set-variable 'delete-old-versions t)
+(customize-set-variable 'version-control t)
+(customize-set-variable 'kept-new-versions 20)
+(customize-set-variable 'kept-old-versions 20)
+
