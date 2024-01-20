@@ -17,7 +17,7 @@
 (defun wymux/select-theme ()
   ""
   (let ((time-now (string-to-number (format-time-string "%H"))))
-    (if (or (>= time-now 4)
+    (if (or (<= time-now 6)
 	     (<= 22 time-now))
 	(wymux/dark-theme)
       (wymux/bright-theme))))
@@ -141,7 +141,10 @@
       ("umx" "" wymux/eshell-umx nil)
       ("um" "" wymux/eshell-um nil)
       ("ugp" "" wymux/eshell-ugp)
-      ("crx" "" "doas cave resolve -x"))))
+      ("crx" "doas cave resolve -x")
+      ("csh" "doas cave show")
+      ("csy" "doas cave sync")
+      ("crw" "doas cave resolve world -cx"))))
 
 (progn
   (when (boundp 'emacs-lisp-mode-abbrev-table)
@@ -269,6 +272,7 @@
     ("s" . mark-defun)
     ("b" . duplicate-dwim)
     ("xo" . wymux/format-buffer)
+    ("xi" . wymux/find-exherbo)
     ("xf" . find-file)
     ("xr" . recentf-open)
     ("xu" . save-buffer)
@@ -283,17 +287,26 @@
     ("\\r" . wymux/open-document)
     ("u" . backward-word)
     ("i" . forward-word)
+    ("ff" . forward-sexp)
+    ("fd" . backward-sexp)
+    ("fi" . switch-to-buffer)
+    ("f\\" . project-compile)
+    ("f]" . project-find-file)
     ("y" . yank)
     ("j" . undo)
     ("e" . backward-kill-word)
     ("r" . kill-word)
     ("c" . kill-sexp)
     ("v" . kill-whole-line)
+    ("b" . kill-region)
     ("`" . delete-char)
+    ("fr" . replace-string)
+    ("fe" . replace-regexp)
     ("z" . recenter-top-bottom)
-    ("h f" . describe-function)
-    ("h v" . describe-variable)
-    ("h a f" . apropos-function)
+    ("hf" . describe-function)
+    ("hv" . describe-variable)
+    ("hm" . man)
+    ("haf" . apropos-function)
     ("p" . wymux/modaled-insert-state)))
 
 (modaled-define-state "insert"
@@ -329,7 +342,8 @@
     ("l" . dired-next-line)
     ("m" . dired-create-directory)
     ("t" . dired-up-directory)
-    ("r" . dired-do-rename)))
+    ("r" . dired-do-rename)
+    ("q" . dired-toggle-read-only)))
 
 (modaled-enable-substate-on-state-change
   "dired"
@@ -352,8 +366,9 @@
 
 (modaled-define-default-state
   '("insert" dired-mode wdired-mode eshell-mode eat-eshell-mode
-    debugger-mode mh-folder-mode emms-playlist-mode calendar-mode
-    magit-status-mode git-commit-mode backtrace-mode info-mode help-mode)
+    debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
+    magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
+    magit-diff-mode text-mode)
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
@@ -475,3 +490,47 @@
 (customize-set-variable 'kept-new-versions 20)
 (customize-set-variable 'kept-old-versions 20)
 
+(defun wymux/find-exherbo ()
+  ""
+  (interactive)
+  (let ((exherbo-file (completing-read "Exherbo file: "
+				       (directory-files-recursively "~/Internet/Git/Exherbo/"
+								    "exheres-0$\\|exlib$"))))
+    (find-file exherbo-file)))
+
+(defun wymux/doas ()
+  ""
+  (interactive)
+  (when (not (file-writable-p buffer-file-name))
+    (progn
+      (find-alternate-file (concat "/doas::" buffer-file-name))
+      (read-only-mode -1))))
+
+(add-hook 'find-file-hook 'wymux/doas)
+
+(setq completions-format 'one-column)
+(setq completions-header-format nil)
+(setq completions-max-height 20)
+(setq completion-auto-select t)
+(setq completion-auto-help 'visible)
+
+(defun wymux/exherbo-local-sync ()
+  "cave sync -s local/`repo' -r origin/`package'"
+  (interactive)
+  (let ((rep (file-name-nondirectory
+	      (string-trim (shell-command-to-string "git rev-parse --show-toplevel"))))
+	(pkg (string-trim (car (vc-git-branches))))
+	(cmd ""))
+    (setq cmd (format "doas cave sync -s local/%s -r origin/%s" rep pkg))
+    (insert cmd)))
+
+(defun wymux/exherbo-enable-tests ()
+  "Enable tests"
+  (interactive)
+  (let ((tests "BUILD_OPTIONS: recommended_tests")
+	(cat/pkg (read-from-minibuffer "Cat/Pkg: "))
+	(cmd ""))
+      (setq cmd (format "echo %s %s >> /etc/paludis/options.conf" cat/pkg tests))
+      (with-temp-buffer
+	(cd "/doas::/")
+	(async-shell-command cmd))))
