@@ -144,7 +144,13 @@
       ("crx" "doas cave resolve -x")
       ("csh" "doas cave show")
       ("csy" "doas cave sync")
-      ("crw" "doas cave resolve world -cx"))))
+      ("crw" "doas cave resolve world -cx")
+      ("cpo" "doas cave owner")
+      ("cpx" "doas cave purge")
+      ("cru" "doas cave uninstall")
+      ("gtcl" "git clone")
+      ("csl" "" wymux/exherbo-local-sync nil)
+      ("cvtest" "" wymux/exherbo-enable-tests))))
 
 (progn
   (when (boundp 'emacs-lisp-mode-abbrev-table)
@@ -207,6 +213,8 @@
   (if (eq major-mode 'emacs-lisp-mode)
       (elisp-byte-compile-file)))
 (add-hook 'after-save-hook 'wymux/save)
+
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/emms/")
 
 (require 'emms)
 (require 'emms-history)
@@ -292,6 +300,7 @@
     ("fi" . switch-to-buffer)
     ("f\\" . project-compile)
     ("f]" . project-find-file)
+    ("f[" . mark-whole-buffer)
     ("y" . yank)
     ("j" . undo)
     ("e" . backward-kill-word)
@@ -368,7 +377,7 @@
   '("insert" dired-mode wdired-mode eshell-mode eat-eshell-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
     magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
-    magit-diff-mode text-mode)
+    magit-diff-mode text-mode magit-log)
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
@@ -521,7 +530,7 @@
 	      (string-trim (shell-command-to-string "git rev-parse --show-toplevel"))))
 	(pkg (string-trim (car (vc-git-branches))))
 	(cmd ""))
-    (setq cmd (format "doas cave sync -s local/%s -r origin/%s" rep pkg))
+    (setq cmd (format "doas cave sync -s local %s -r origin/%s" rep pkg))
     (insert cmd)))
 
 (defun wymux/exherbo-enable-tests ()
@@ -534,3 +543,11 @@
       (with-temp-buffer
 	(cd "/doas::/")
 	(async-shell-command cmd))))
+
+(customize-set-variable 'eshell-list-files-after-cd t)
+
+(defun wymux/scrot ()
+  "Screenshot"
+  (interactive)
+  (let ((flags "-q 100 -s"))
+    (shell-command "scrot" flags)))
