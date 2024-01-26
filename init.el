@@ -1,3 +1,19 @@
+(add-to-list 'load-path "~/Internet/Git/Emacs/compat/")
+(setq no-littering-etc-directory
+      (expand-file-name "root/etc/" user-emacs-directory))
+(setq no-littering-var-directory
+      (expand-file-name "root/var/" user-emacs-directory))
+
+(add-to-list 'load-path "~/Internet/Git/Emacs/no-littering/")
+(require 'no-littering)
+
+(require 'recentf)
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-var-directory))
+(add-to-list 'recentf-exclude
+             (recentf-expand-file-name no-littering-etc-directory))
+
+(load-file "~/.config/emacs/lib/eshell/eshell.elc")
 (defvar wymux-light-theme t)
 
 (defun wymux/dark-theme ()
@@ -23,7 +39,7 @@
       (wymux/bright-theme))))
 
 (wymux/select-theme)
-
+(wymux/dark-theme)
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
 (customize-set-variable 'inhibit-splash-screen t)
@@ -94,10 +110,22 @@
 	([?\s-0] . other-window)
 	([kp-delete] . wymux/mpv)
 	([kp-prior] . mh-rmail)
+	([kp-subtract] . gnus)
 	([kp-right] . eshell)
+	([kp-add] . project-eshell)
 	([f12] . wymux/firefox)
+	([print] . wymux/scrot)
+	([deletechar] . wymux/scrot-all)
 	([kp-multiply] . previous-buffer)
 	([kp-divide] . next-buffer)))
+
+(require 'exwm-randr)
+;;(setq exwm-randr-workspace-output-plist '(0 "VGA1"))
+(add-hook 'exwm-randr-screen-change-hook
+          (lambda ()
+            (start-process-shell-command
+             "xrandr" nil "xrandr --output DP-1-0 --above eDP-1 --mode 3440x1440 --rate 120")))
+(exwm-randr-enable)
 
 (defun wymux/customize-set-variable ()
   ""
@@ -108,60 +136,13 @@
 
 (setq-default abbrev-mode t)
 
-(require 'eshell)
-(defun wymux/eshell-ug ()
-  ""
-  (interactive)
-  (insert "cd ~/Internet/Git/")
-  (eshell-send-input))
-
-(defun wymux/eshell-umx ()
-  ""
-  (interactive)
-  (insert "cd ~/Internet/Git/Exherbo/")
-  (eshell-send-input))
-
-(defun wymux/eshell-um ()
-  ""
-  (interactive)
-  (insert "cd ~/Media/Musica")
-  (eshell-send-input))
-
-(defun wymux/eshell-ugp ()
-  ""
-  (interactive)
-  (insert "cd ~/Internet/Git/Project/")
-  (eshell-send-input))
-
-(progn
-  (when (boundp 'eshell-mode-abbrev-table)
-    (clear-abbrev-table eshell-mode-abbrev-table))
-  (define-abbrev-table 'eshell-mode-abbrev-table
-    '(("ug" "" wymux/eshell-ug nil)
-      ("umx" "" wymux/eshell-umx nil)
-      ("um" "" wymux/eshell-um nil)
-      ("ugp" "" wymux/eshell-ugp)
-      ("crx" "doas cave resolve -x")
-      ("csh" "doas cave show")
-      ("csy" "doas cave sync")
-      ("crw" "doas cave resolve world -cx")
-      ("cpo" "doas cave owner")
-      ("cpx" "doas cave purge")
-      ("cru" "doas cave uninstall")
-      ("gtcl" "git clone")
-      ("csl" "" wymux/exherbo-local-sync nil)
-      ("cvtest" "" wymux/exherbo-enable-tests))))
-
-(progn
-  (when (boundp 'emacs-lisp-mode-abbrev-table)
-    (clear-abbrev-table emacs-lisp-mode-abbrev-table))
-  (define-abbrev-table 'emacs-lisp-mode-abbrev-table
-    '(("csv" "" wymux/customize-set-variable nil))))
 
 (keymap-global-set "M-[" 'backward-paragraph)
 (keymap-global-set "M-]" 'forward-paragraph)
 (keymap-global-set "C-t" 'hippie-expand)
 (keymap-global-set "C-<backspace>" 'kill-whole-line)
+(keymap-global-set "C-w" 'completion-at-point)
+(keymap-global-set "C-i" 'dabbrev-expand)
 
 (load-file "/usr/share/mailutils/mh/mailutils-mh.el")
 
@@ -260,7 +241,10 @@
   :lighter "[NOR]"
   :cursor-type 'box)
 
-(modaled-define-keys
+(defun wymux/modaled-qwerty ()
+  ""
+  (interactive)
+  (modaled-define-keys
   :states '("normal")
   :bind
   `(("k" . backward-char)
@@ -278,7 +262,8 @@
     ("q" . move-beginning-of-line)
     ("w" . move-end-of-line)
     ("s" . mark-defun)
-    ("b" . duplicate-dwim)
+    ("m" . imenu)
+    ("fb" . duplicate-dwim)
     ("xo" . wymux/format-buffer)
     ("xi" . wymux/find-exherbo)
     ("xf" . find-file)
@@ -301,23 +286,94 @@
     ("f\\" . project-compile)
     ("f]" . project-find-file)
     ("f[" . mark-whole-buffer)
+    ("fp" . ffap)
+    ("fo" . occur)
+    ("ft" . rgrep)
+    ("n" . isearch-forward)
     ("y" . yank)
     ("j" . undo)
     ("e" . backward-kill-word)
     ("r" . kill-word)
     ("c" . kill-sexp)
-    ("v" . kill-whole-line)
+    ("/" . kill-whole-line)
     ("b" . kill-region)
     ("`" . delete-char)
     ("fr" . replace-string)
     ("fe" . replace-regexp)
     ("z" . recenter-top-bottom)
+    ("hc" . describe-key)
     ("hf" . describe-function)
     ("hv" . describe-variable)
     ("hm" . man)
     ("haf" . apropos-function)
-    ("p" . wymux/modaled-insert-state)))
+    ("p" . wymux/modaled-insert-state))))
 
+(defun wymux/modaled-engram ()
+  ""
+  (interactive)
+  (modaled-define-keys
+  :states '("normal")
+  :bind
+  `(("h" . backward-char)
+    ("s" . forward-char)
+    ("d" . previous-line)
+    ("t" . next-line)
+    ("[" . backward-paragraph)
+    ("]" . forward-paragraph)
+    ("g" . set-mark-command)
+    ("a" . execute-extended-command)
+    ("," . backward-whitespace)
+    ("." . forward-whitespace)
+    ("b" . repeat)
+    ("fm" . back-to-indentation)
+    ("\'" . move-beginning-of-line)
+    ("\"" . move-end-of-line)
+    ("s" . mark-defun)
+    ("m" . imenu)
+    ("ey" . duplicate-dwim)
+    ("ev" . wymux/format-buffer)
+    ("eo" . find-file)
+    ("el" . recentf-open)
+    ("eu" . save-buffer)
+    ("e[" . beginning-of-buffer)
+    ("e]" . end-of-buffer)
+    ("ef" . wymux/emms-play-find)
+    ("ee" . emms)
+    ("ed" . emms-play-directory-tree)
+    ("en" . magit)
+    ("e<backspace>" . compile)
+    ("et" . wymux/search-www)
+    ("er" . wymux/open-document)
+    ("l" . backward-word)
+    ("w" . forward-word)
+    ("-" . forward-sexp)
+    (";" . backward-sexp)
+    ("ei" . switch-to-buffer)
+    ("e\\" . project-compile)
+    ("e_" . project-find-file)
+    ("e`" . mark-whole-buffer)
+    ("ep" . ffap)
+    ("ef" . occur)
+    ("eq" . rgrep)
+    ("n" . isearch-forward)
+    ("y" . yank)
+    ("j" . undo)
+    ("r" . backward-kill-word)
+    ("m" . kill-word)
+    ("c" . kill-sexp)
+    ("v" . kill-whole-line)
+    ("b" . kill-region)
+    ("`" . delete-char)
+    ("er" . replace-string)
+    ("ee" . replace-regexp)
+    ("z" . recenter-top-bottom)
+    ("@e" . describe-function)
+    ("@a" . describe-variable)
+    ("@m" . man)
+    ("@he" . apropos-function)
+    ("v" . wymux/modaled-insert-state))))
+
+(wymux/modaled-qwerty)
 (modaled-define-state "insert"
   :sparse t
   :no-suppress t
@@ -330,6 +386,7 @@
   '(
     ([escape] . modaled-set-default-state)
     ([ESCAPE] . modaled-set-default-state)
+    ([C-c C-h] . wymux/modaled-normal-state)
     ))
 
 (modaled-define-substate "emacs-lisp")
@@ -377,13 +434,19 @@
   '("insert" dired-mode wdired-mode eshell-mode eat-eshell-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
     magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
-    magit-diff-mode text-mode magit-log)
+    magit-diff-mode magit-log exwm-mode gnus-summary-mode gnus-group-mode-hook
+    text-mode magit-refs-mode)
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
   ""
   (interactive)
   (modaled-set-state "insert"))
+
+(defun wymux/modaled-normal-state ()
+  ""
+  (interactive)
+  (modaled-set-state "normal"))
 
 (add-to-list 'auto-mode-alist
 	     '("\\.tsx?\\'" . typescript-ts-mode))
@@ -408,7 +471,6 @@
 (add-hook 'typescript-ts-mode-hook 'emmet2-mode)
 
 (load-file "~/Internet/Git/Emacs/eacl/eacl.el")
-(add-to-list 'load-path "~/Internet/Git/Emacs/compat/")
 (load-file "~/Internet/Git/Emacs/vertico/vertico.el")
 (add-to-list 'load-path "~/Internet/Git/Emacs/vertico/extensions/")
 (load-file "~/Internet/Git/Emacs/emacs-websocket/websocket.el")
@@ -480,7 +542,7 @@
 		    (completing-read "Doc: " (directory-files-recursively dir reg))))))
 
 (customize-set-variable 'exwm-manage-configurations 
-			'(((member exwm-class-name '("firefox-default" "llpp"))
+			'(((member exwm-class-name '("llpp"))
 			   char-mode t)))
 
 (defun wymux/insert-gpl ()
@@ -549,5 +611,29 @@
 (defun wymux/scrot ()
   "Screenshot"
   (interactive)
-  (let ((flags "-q 100 -s"))
-    (shell-command "scrot" flags)))
+  (let ((flags "-q 100 -s")
+	(date (format-time-string "%m-%d-%Y-%H-%M-%S-%N-%6N-%3N")))
+    (shell-command (concat "scrot -q 100 -s /tmp/" date ".png"))))
+
+(defun wymux/scrot-all ()
+  "Screenshot."
+  (interactive)
+  (let ((date (format-time-string "%m-%d-%Y-%H-%M-%S-%N-%6N-%3N")))
+  (shell-command (concat "scrot -q 100 /tmp/" date ".png"))))
+
+(add-hook 'after-save-hook
+  'executable-make-buffer-file-executable-if-script-p)
+
+(setq gnus-select-method '(nntp "localhost"))
+
+(customize-set-variable 'gnus-fetch-old-headers nil)
+
+(setq-default mm-text-html-renderer 'gnus-w3m)
+(setq-default w3m-safe-url-regexp nil)
+
+(defun wymux/auto-create-missing-dirs ()
+  (let ((target-dir (file-name-directory buffer-file-name)))
+    (unless (file-exists-p target-dir)
+      (make-directory target-dir t))))
+
+(add-to-list 'find-file-not-found-functions #'wymux/auto-create-missing-dirs)
