@@ -1,4 +1,4 @@
-(set-face-attribute 'default nil :family "Berkeley Mono" :height 120)
+(set-face-attribute 'default nil :family "Berkeley Mono" :height 130)
 (global-font-lock-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)

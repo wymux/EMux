@@ -1,3 +1,6 @@
+(defvar wymux/eshell-ring (make-ring 1000))
+(defvar wymux/eshell-history-alist nil)
+
 (defun wymux/eshell-ug ()
   ""
   (interactive)
@@ -57,8 +60,8 @@
   (define-abbrev-table 'eshell-mode-abbrev-table
     '(("ccc" "" wymux/eshell-ccc nil)
       ("ccd" "" wymux/eshell-ccd nil)
-      ("ccurl" "" wymux/eshell-curl)
-      ("cf" "" wymux/find-exherbo nil)
+      ("cwget" "" wymux/eshell-wget)
+      ("cf" "" wymux /find-exherbo nil)
       ("cff" "" wymux/eshell-cff nil)
       ("cfp" "" wymux/eshell-cfp nil)
       ("css" "doas cave search")
@@ -71,17 +74,22 @@
       ("csl" "" wymux/exherbo-local-sync nil)
       ("csy" "doas cave sync")
       ("cvtest" "" wymux/exherbo-enable-tests)
+      ("fe" "" (lambda () (call-interactively 'wymux/emms-play-find)))
+      ("fp" "" (lambda () (call-interactively 'emms-play-directory-tree)))
+      ("ff" "" (lambda () (call-interactively 'find-file)))
+      ("fr" "" (lambda () (call-interactively 'recentf-open)) nil)
       ("gtad" "git add")
       ("gtcl" "" wymux/gtcl nil)
       ("gtcmt" "git commit -S -m \" \"")
       ("gtsc" "git switch -c")
-      ("mk" "" wymux/eshell-mk nil)
+      ("mkcd" "" wymux/eshell-mk nil)
       ("ug" "" wymux/eshell-ug nil)
       ("ugp" "" wymux/eshell-ugp)
       ("um" "" wymux/eshell-um nil)
       ("ums" "" wymux/ums nil)
       ("umx" "" wymux/eshell-umx nil)
-      ("umxx" "" wymux/eshell-umxx nil))))
+      ("umxx" "" wymux/eshell-umxx nil)
+      ("ro" "" wymux/open-document nil))))
 
 (progn
   (when (boundp 'emacs-lisp-mode-abbrev-table)
@@ -89,7 +97,7 @@
   (define-abbrev-table 'emacs-lisp-mode-abbrev-table
     '(("csv" "" wymux/customize-set-variable nil))))
 
-(defun wymux/eshell-curl ()
+(defun wymux/eshell-wget ()
   ""
   (interactive)
   (let ((url "")
@@ -101,7 +109,7 @@
       (search-forward "Down")
       (search-forward "://")
       (setq url (thing-at-point 'url)))
-      (insert (concat "wget -O " url))))
+      (insert (concat "wget " url))))
 
 (defun wymux/eshell-crx ()
   ""
@@ -132,13 +140,15 @@
     (replace-regexp-in-string
      "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2")))))
 
-(defun wymux/eshell-ccd ()
-  ""
-  (interactive)
-  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
-    (insert (concat "cd ~/Internet/Exherbo/" cat/pkg)))
+(defun wymux/eshell-abbrev (str)
+  (insert str)
   (eshell-send-input))
 
+(defun wymux/eshell-ccd ()
+  (interactive)
+  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
+    (wymux/eshell-abbrev (format "cd ~/Internet/Exherbo/%s" cat/pkg))))
+  
 (defun wymux/eshell-copt ()
   ""
   (interactive)
@@ -157,3 +167,21 @@
     (concat (format-time-string "%Y-%m-%d %H:%M" (current-time))
       (if (= (user-uid) 0) " # " " $ "))))
 
+
+(defun wymux/eshell-store-last-output ()
+  ""
+  (let ((command
+	 (string-trim (buffer-substring-no-properties eshell-last-input-start eshell-last-input-end)))
+	(output
+	 (buffer-substring-no-properties eshell-last-input-end eshell-last-output-start)))
+    (add-to-list 'wymux/eshell-history-alist `(,command . ,output))))
+
+(add-hook 'eshell-post-command-hook 'wymux/eshell-store-last-output)
+(setq wymux/eshell-history-alist nil)
+(defun wymux/eshell-kill-command ()
+  ""
+  (interactive)
+  (let ((command (completing-read "Kill command: " wymux/eshell-history-alist))
+	(str nil))
+    (setq str (cdr (assoc command wymux/eshell-history-alist)))
+    (kill-new (format "%s" str))))
