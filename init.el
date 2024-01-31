@@ -263,6 +263,21 @@
   :lighter "[NOR]"
   :cursor-type 'box)
 
+
+(modaled-define-state "insert"
+  :lighter "[INS]"
+  :cursor-type 'bar
+  :no-suppress t)
+
+(modaled-define-keys
+  :states '("insert" "normal")
+  :bind
+  '(
+    ([escape] . modaled-set-default-state)
+    ([ESCAPE] . modaled-set-default-state)
+    ([C-c C-h] . wymux/modaled-normal-state)
+    ))
+
 (defun wymux/modaled-qwerty ()
   ""
   (interactive)
@@ -333,15 +348,6 @@
       ("haf" . apropos-function)
       ("p" . wymux/modaled-insert-state))
     
-    (modaled-define-keys
-      :states '("insert" "normal")
-      :bind
-      '(
-	([escape] . modaled-set-default-state)
-	([ESCAPE] . modaled-set-default-state)
-	([C-c C-h] . wymux/modaled-normal-state)
-	))
-
     (modaled-define-substate "emacs-lisp")
     (modaled-define-keys
       :substates '("emacs-lisp")
@@ -369,7 +375,7 @@
 
     (modaled-enable-substate-on-state-change
       "dired"
-      :states '("insert")
+      :states '("normal")
       :major '(dired-mode))
 
     (modaled-define-substate "eglot")
@@ -393,9 +399,7 @@
     (modaled-enable-substate-on-state-change
       "exheres"
       :states '("normal")
-      :major '(exheres-mode))
-
-    
+      :major '(exheres-mode))    
     ))
 
 (defun wymux/modaled-engram ()
@@ -464,11 +468,6 @@
       ("v" . wymux/modaled-insert-state))))
 
 (wymux/modaled-qwerty)
-(modaled-define-state "insert"
-  :sparse t
-  :no-suppress t
-  :cursor-type 'bar
-  :lighter "[INS]")
 
 (defun wymux/exherbo-rename ()
   ""
@@ -479,7 +478,7 @@
     (rename-file current-file-name new-file-name)))
 
 (modaled-define-default-state
-  '("insert" dired-mode wdired-mode eshell-mode eat-eshell-mode
+  '("insert" wdired-mode eshell-mode eat-eshell-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
     magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
     magit-diff-mode exwm-mode gnus-summary-mode gnus-group-mode-hook
@@ -705,4 +704,5 @@
   (modaled-dired-substate-mode 1)
   (modaled-insert-state-mode 1))
 
+(require 'wdired)
 (keymap-set wdired-mode-map "C-c C-c" 'wymux/wdired-finish-edit)
