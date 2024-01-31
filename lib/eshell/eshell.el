@@ -89,7 +89,8 @@
       ("ums" "" wymux/ums nil)
       ("umx" "" wymux/eshell-umx nil)
       ("umxx" "" wymux/eshell-umxx nil)
-      ("ro" "" wymux/open-document nil))))
+      ("ro" "" wymux/open-document nil)
+      ("kil" "" wymux/eshell-kill-command))))
 
 (progn
   (when (boundp 'emacs-lisp-mode-abbrev-table)
@@ -177,7 +178,7 @@
     (add-to-list 'wymux/eshell-history-alist `(,command . ,output))))
 
 (add-hook 'eshell-post-command-hook 'wymux/eshell-store-last-output)
-(setq wymux/eshell-history-alist nil)
+
 (defun wymux/eshell-kill-command ()
   ""
   (interactive)

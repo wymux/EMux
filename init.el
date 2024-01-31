@@ -116,7 +116,7 @@
 (setq exwm-input-global-keys
       `(
 	([?\s-r] . exwm-reset)
-	([kp-end] . save-buffers-kill-
+	([kp-end] . save-buffers-kill-emacs)
 	([f1] . wymux/darken)
 	([f2] . wymux/brighten)
 	([?\s-w] . wymux/chromium-light)
@@ -131,11 +131,13 @@
 	([kp-right] . eshell)
 	([kp-add] . project-eshell)
 	([?\s-e] . emms)
+	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
 	([f12] . wymux/chromium)
 	([print] . wymux/scrot)
  	([kp-multiply] . previous-buffer)
-	([kp-divide] . next-buffer)))
+	([kp-divide] . next-buffer)
+	))
 
 (require 'exwm-randr)
 (add-hook 'exwm-randr-screen-change-hook
@@ -154,7 +156,6 @@
     (insert (concat basestr var " nil" ")" "\n"))))
 
 (setq-default abbrev-mode t)
-
 
 (keymap-global-set "M-[" 'backward-paragraph)
 (keymap-global-set "M-]" 'forward-paragraph)
@@ -217,6 +218,7 @@
 
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/emms/")
 
+(require 'eglot)
 (require 'emms)
 (require 'emms-history)
 (require 'emms-playlist-mode)
@@ -309,6 +311,8 @@
       ("fp" . ffap)
       ("fo" . occur)
       ("ft" . rgrep)
+      ("fx" . exchange-point-and-mark)
+      ("fu" . pop-global-mark)
       ("f'" . ispell-buffer)
       ("n" . isearch-forward)
       ("y" . yank)
@@ -327,7 +331,72 @@
       ("hv" . describe-variable)
       ("hm" . man)
       ("haf" . apropos-function)
-      ("p" . wymux/modaled-insert-state))))
+      ("p" . wymux/modaled-insert-state))
+    
+    (modaled-define-keys
+      :states '("insert" "normal")
+      :bind
+      '(
+	([escape] . modaled-set-default-state)
+	([ESCAPE] . modaled-set-default-state)
+	([C-c C-h] . wymux/modaled-normal-state)
+	))
+
+    (modaled-define-substate "emacs-lisp")
+    (modaled-define-keys
+      :substates '("emacs-lisp")
+      :bind
+      '((" x" . eval-defun)))
+
+    (modaled-enable-substate-on-state-change
+      "emacs-lisp"
+      :states '("normal")
+      :major '(emacs-lisp-mode))
+
+    (modaled-define-substate "dired")
+    (modaled-define-keys
+      :substates '("dired")
+      :bind
+      '(("o" . dired-previous-line)
+	("l" . dired-next-line)
+	("m" . dired-create-directory)
+	("t" . dired-up-directory)
+	("r" . dired-do-rename)
+	("q" . wymux/dired-write)
+	("x" . dired-do-delete)
+	("u" . dired-mark)
+	))
+
+    (modaled-enable-substate-on-state-change
+      "dired"
+      :states '("insert")
+      :major '(dired-mode))
+
+    (modaled-define-substate "eglot")
+    (modaled-define-keys
+      :substates '("eglot")
+      :bind
+      '((" g" . eglot-code-actions)
+	(" u" . flymake-goto-next-error)))
+
+    (modaled-enable-substate-on-state-change
+      "eglot"
+      :states '("normal")
+      :minor '(eglot--managed-mode))
+
+    (modaled-define-substate "exheres")
+    (modaled-define-keys
+      :substates '("exheres")
+      :bind
+      '((" g" . wymux/exherbo-rename)))
+
+    (modaled-enable-substate-on-state-change
+      "exheres"
+      :states '("normal")
+      :major '(exheres-mode))
+
+    
+    ))
 
 (defun wymux/modaled-engram ()
   ""
@@ -400,67 +469,6 @@
   :no-suppress t
   :cursor-type 'bar
   :lighter "[INS]")
-
-(modaled-define-keys
-  :states '("insert" "normal")
-  :bind
-  '(
-    ([escape] . modaled-set-default-state)
-    ([ESCAPE] . modaled-set-default-state)
-    ([C-c C-h] . wymux/modaled-normal-state)
-    ))
-
-(modaled-define-substate "emacs-lisp")
-(modaled-define-keys
-  :substates '("emacs-lisp")
-  :bind
-  '((" x" . eval-defun)))
-
-(modaled-enable-substate-on-state-change
-  "emacs-lisp"
-  :states '("normal")
-  :major '(emacs-lisp-mode))
-
-(modaled-define-substate "dired")
-(modaled-define-keys
-  :substates '("dired")
-  :bind
-  '(("o" . dired-previous-line)
-    ("l" . dired-next-line)
-    ("m" . dired-create-directory)
-    ("t" . dired-up-directory)
-    ("r" . dired-do-rename)
-    ("q" . dired-toggle-read-only)))
-
-(modaled-enable-substate-on-state-change
-  "dired"
-  :states '("insert")
-  :major '(dired-mode))
-
-(require 'eglot)
-
-(modaled-define-substate "eglot")
-(modaled-define-keys
-  :substates '("eglot")
-  :bind
-  '((" g" . eglot-code-actions)
-    (" u" . flymake-goto-next-error)))
-
-(modaled-enable-substate-on-state-change
-  "eglot"
-  :states '("normal")
-  :minor '(eglot--managed-mode))
-
-(modaled-define-substate "exheres")
-(modaled-define-keys
-  :substates '("exheres")
-  :bind
-  '((" g" . wymux/exherbo-rename)))
-
-(modaled-enable-substate-on-state-change
-  "exheres"
-  :states '("normal")
-  :major '(exheres-mode))
 
 (defun wymux/exherbo-rename ()
   ""
@@ -680,3 +688,21 @@
 (add-to-list 'find-file-not-found-functions #'wymux/auto-create-missing-dirs)
 
 (customize-set-variable 'disabled-command-function nil)
+
+(setq-default ido-mode nil)
+
+(defun wymux/dired-write ()
+  ""
+  (interactive)
+  (modaled-dired-substate-mode -1)
+  (modaled-insert-state-mode -1)
+  (wdired-change-to-wdired-mode))
+
+(defun wymux/wdired-finish-edit ()
+  ""
+  (interactive)
+  (wdired-finish-edit)
+  (modaled-dired-substate-mode 1)
+  (modaled-insert-state-mode 1))
+
+(keymap-set wdired-mode-map "C-c C-c" 'wymux/wdired-finish-edit)
