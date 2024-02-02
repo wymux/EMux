@@ -49,8 +49,8 @@
     (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))))
 
 (wymux/select-theme)
-(wymux/chromium-theme)
 (wymux/dark-theme)
+(wymux/chromium-theme)
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
 (customize-set-variable 'inhibit-splash-screen t)
@@ -416,7 +416,7 @@
       :bind
       '((" g" . wymux/exherbo-rename)
 	(" e" . wymux/eshell-ccd-other-window)
-	(" x" . wymux/exherbo-compile))) 
+	(" x" . wymux/exherbo-compile)))
 
     (modaled-enable-substate-on-state-change
       "exheres"
@@ -497,7 +497,8 @@
   (let ((current-file-name (file-name-nondirectory (buffer-file-name)))
 	(new-file-name ""))
     (setq new-file-name (read-file-name "Bump to: " nil nil nil current-file-name))
-    (rename-file current-file-name new-file-name)))
+    (rename-file current-file-name new-file-name)
+    (find-file new-file-name)))
 
 (modaled-define-default-state
   '("insert" wdired-mode eshell-mode eat-eshell-mode
@@ -817,13 +818,38 @@ Version 2015-04-09"
       ("mscp" "MESON_SRC_CONFIGURE_PARAMS")
       ("mscs" "MESON_SRC_CONFIGURE_OPTION_SWITCHES")
       ("msct" "MESON_SRC_CONFIGURE_TESTS")
-      
+      ("ccc" "" wymux/insert-exherbo-cat-pkg))))
+
+(progn
+  (when (boundp 'exlib-mode-abbrev-table)
+    (clear-abbrev-table exlib-mode-abbrev-table))
+  (define-abbrev-table 'exlib-mode-abbrev-table
+    '(("ee" "--enable-")
+      ("dd" "--disable")
+      ("ww" "--with")
+      ("wo" "--without")
+      ("cee" "" exherbo-cee)
+      ("cscb" "CMAKE_SRC_CONFIGURE_OPTION_BUILDS")
+      ("csce" "CMAKE_SRC_CONFIGURE_OPTION_ENABLES")
+      ("cscp" "CMAKE_SRC_CONFIGURE_PARAMS")
+      ("cscp" "CMAKE_SRC_CONFIGURE_OPTIONS")
+      ("csct" "CMAKE_SRC_CONFIGURE_TESTS")
+      ("cscw" "CMAKE_SRC_CONFIGURE_OPTION_WANTS")
+      ("cscwi" "CMAKE_SRC_CONFIGURE_OPTION_WITHS")
+      ("csip" "CMAKE_SRC_INSTALL_PARAMS")
+      ("mscf" "MESON_SRC_CONFIGURE_OPTION_FEATURES")
+      ("msco" "MESON_SRC_CONFIGURE_OPTIONS")
+      ("mscp" "MESON_SRC_CONFIGURE_PARAMS")
+      ("mscs" "MESON_SRC_CONFIGURE_OPTION_SWITCHES")
+      ("msct" "MESON_SRC_CONFIGURE_TESTS")
       ("ccc" "" wymux/insert-exherbo-cat-pkg))))
 
 (defun wymux/exherbo-compile ()
   ""
   (interactive)
   (project-eshell)
+  (eshell/clear)
   (wymux/exherbo-local-sync)
   (insert " && ")
-  (wymux/eshell-crx))
+  (insert (format "doas cave resolve -x %s" (car (vc-git-branches))))
+  (eshell-send-input))

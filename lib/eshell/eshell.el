@@ -104,14 +104,14 @@
   (interactive)
   (let ((url "")
 	(cat/pkg (replace-regexp-in-string
-	      "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2"))))))
+		  "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2"))))))
     (with-temp-buffer
-    (shell-command (concat "doas cave show -n -k DOWNLOADS " cat/pkg) (current-buffer))
+      (shell-command (concat "doas cave show -n -k DOWNLOADS " cat/pkg) (current-buffer))
       (goto-char (point-min))
       (search-forward "Down")
       (search-forward "://")
       (setq url (thing-at-point 'url)))
-      (insert (concat "wget " url))))
+    (insert (concat "wget " url))))
 
 (defun wymux/eshell-crx ()
   ""
@@ -119,7 +119,7 @@
   (let ((cat/pkg (replace-regexp-in-string
 		  "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2"))))))
     (insert (concat "doas cave resolve -x " cat/pkg)))
-    (eshell-send-input))
+  (eshell-send-input))
 
 (defun wymux/eshell-mk ()
   "mkdir and cd"
@@ -139,8 +139,8 @@
 (defun wymux/exherbo-cat-pkg ()
   ""
   (interactive)
-    (replace-regexp-in-string
-     "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2")))))
+  (replace-regexp-in-string
+   "/home/wymux/Internet/Exherbo/" "" (completing-read "cat/pkg: " (split-string (shell-command-to-string "find ~/Internet/Exherbo -type d -maxdepth 2 -mindepth 2")))))
 
 (defun wymux/eshell-abbrev (str)
   (insert str)
@@ -148,9 +148,11 @@
 
 (defun wymux/eshell-ccd ()
   (interactive)
-  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
-    (wymux/eshell-abbrev (format "cd ~/Internet/Exherbo/%s" cat/pkg))))
-  
+  (let ((cat/pkg (wymux/exherbo-cat-pkg))
+	(ver ""))
+    (setq ver (file-name-nondirectory (read-directory-name "Version: " (format "~/Internet/Exherbo/%s/" cat/pkg))))
+    (wymux/eshell-abbrev (format "cd ~/Internet/Exherbo/%s/%s" cat/pkg ver))))
+
 (defun wymux/eshell-copt ()
   ""
   (interactive)
@@ -159,15 +161,15 @@
 	(exheres "")
 	(options ""))
     (setq exheres-dir (concat (string-trim (shell-command-to-string
-		       (format "find ~/Internet/Git/Exherbo/ -type d -wholename *%s*" cat/pkg))) "/"))
+					    (format "find ~/Internet/Git/Exherbo/ -type d -wholename *%s*" cat/pkg))) "/"))
     (setq exheres (read-file-name "Exheres: " exheres-dir))
     (setq options (shell-command-to-string (concat "ex-option.sh " exheres)))
     (kill-new options)))
 
 (setq eshell-prompt-function
-  (lambda ()
-    (concat (format-time-string "%Y-%m-%d %H:%M" (current-time))
-      (if (= (user-uid) 0) " # " " $ "))))
+      (lambda ()
+	(concat (format-time-string "%Y-%m-%d %H:%M" (current-time))
+		(if (= (user-uid) 0) " # " " $ "))))
 
 
 (defun wymux/eshell-store-last-output ()
