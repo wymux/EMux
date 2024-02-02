@@ -43,10 +43,11 @@
   (find-file "~/.cache/ex-problems.json"))
 
 (defun wymux/gtcl ()
-  "Git clone from clipboard."
+  "Git clone from system clipboard."
   (interactive)
   (let ((url (car kill-ring)))
-    (insert (concat "git clone " url))))
+    (insert (concat "git clone ")))
+  (call-interactively 'yank))
 
 (defun wymux/ums ()
   ""
@@ -61,10 +62,10 @@
     '(("ccc" "" wymux/eshell-ccc nil)
       ("ccd" "" wymux/eshell-ccd nil)
       ("cwget" "" wymux/eshell-wget)
-      ("cf" "" wymux /find-exherbo nil)
+      ("cf" "" wymux/find-exherbo nil)
       ("cff" "" wymux/eshell-cff nil)
       ("cfp" "" wymux/eshell-cfp nil)
-      ("css" "doas cave search")
+      ("ccs" "doas cave search --index ~/.cache/cave_all -k ")
       ("cpo" "doas cave owner")
       ("cpx" "doas cave purge")
       ("cru" "doas cave uninstall")
@@ -186,3 +187,13 @@
 	(str nil))
     (setq str (cdr (assoc command wymux/eshell-history-alist)))
     (kill-new (format "%s" str))))
+ 
+
+(defun wymux/eshell-ccd-other-window ()
+  ""
+  (interactive)
+  (if (= 1 (length (window-list)))
+      (split-window-horizontally))
+  (windmove-right)
+  (eshell '99)
+  (wymux/eshell-ccd))
