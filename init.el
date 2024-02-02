@@ -98,7 +98,7 @@
 
 (defun wymux/chromium-dark ()
   ""
-  (start-process "Chromium" "Chromium-dark" "chromium-browser"   "--user-data-dir=/home/wymux/.config/chromium/wymux-dark"))
+  (start-process "Chromium" "Chromium-dark" "chromium-browser"  "--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark"))
 
 (defun wymux/chromium ()
   "Load chromium"
@@ -143,7 +143,7 @@
 	([kp-add] . project-eshell)
 	([?\s-e] . emms)
 	([?\s-s] . mh-smail)
-	([f8] . delete-frame)
+	([?\s-d] . delete-frame)
 	([f9] . other-frame)
 	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
