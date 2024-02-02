@@ -144,6 +144,7 @@
 	([?\s-e] . emms)
 	([?\s-s] . mh-smail)
 	([?\s-d] . delete-frame)
+	([?\s-u] . ffap)
 	([f9] . other-frame)
 	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
@@ -737,3 +738,15 @@
 
 (setq magit-display-buffer-function #'magit-display-buffer-pop-up-frame)
 (customize-set-variable 'exwm-workspace-number 1)
+
+(defun wymux/get-weblinks ()
+  "User selects link from current buffer."
+  (interactive)
+  (let (url-list)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "https.+" nil t)
+	(push
+	 (buffer-substring-no-properties (match-beginning 0) (match-end 0))
+	 url-list)))
+    (browse-url (completing-read "Goto: " url-list))))
