@@ -3,7 +3,7 @@
       (expand-file-name "root/etc/" user-emacs-directory))
 (setq no-littering-var-directory
       (expand-file-name "root/var/" user-emacs-directory))
-
+ 
 (add-to-list 'load-path "~/Internet/Git/Emacs/no-littering/")
 (require 'no-littering)
 
@@ -21,14 +21,18 @@
   (interactive)
   (set-foreground-color "#FFFFFF")
   (set-background-color "#000000")
-  (setq wymux-light-theme nil))
+  (setq wymux-light-theme nil)
+  (modify-all-frames-parameters '((background-color . "black")
+				      (foreground-color . "white"))))
 
 (defun wymux/bright-theme ()
   ""
   (interactive)
   (set-foreground-color "#000000")
   (set-background-color "#FFFFFF")
-  (setq wymux-light-theme t))
+  (setq wymux-light-theme t)
+  (modify-all-frames-parameters '((background-color . "white")
+				      (foreground-color . "black"))))
 
 (defun wymux/select-theme ()
   ""
@@ -38,7 +42,14 @@
 	(wymux/dark-theme)
       (wymux/bright-theme))))
 
+(defun wymux/chromium-theme ()
+  ""
+  (if wymux-light-theme
+      (setq browse-url-chromium-arguments '("--disable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-light" "--new-tab" ))
+    (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))))
+
 (wymux/select-theme)
+(wymux/chromium-theme)
 (wymux/dark-theme)
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
@@ -87,7 +98,7 @@
 
 (defun wymux/chromium-dark ()
   ""
-  (start-process "Chromium" "Chromium-dark" "chromium-browser"  "--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark"))
+  (start-process "Chromium" "Chromium-dark" "chromium-browser"   "--user-data-dir=/home/wymux/.config/chromium/wymux-dark"))
 
 (defun wymux/chromium ()
   "Load chromium"
@@ -131,6 +142,9 @@
 	([kp-right] . eshell)
 	([kp-add] . project-eshell)
 	([?\s-e] . emms)
+	([?\s-s] . mh-smail)
+	([f8] . delete-frame)
+	([f9] . other-frame)
 	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
 	([f12] . wymux/chromium)
@@ -394,7 +408,8 @@
     (modaled-define-keys
       :substates '("exheres")
       :bind
-      '((" g" . wymux/exherbo-rename)))
+      '((" g" . wymux/exherbo-rename)
+	(" e" . wymux/eshell-ccd-other-window))) 
 
     (modaled-enable-substate-on-state-change
       "exheres"
@@ -706,3 +721,19 @@
 
 (require 'wdired)
 (keymap-set wdired-mode-map "C-c C-c" 'wymux/wdired-finish-edit)
+(setq browse-url-browser-function 'browse-url-chromium)
+
+(customize-set-variable 'save-interprogram-paste-before-kill t)
+(customize-set-variable 'yank-pop-change-selection t)
+(setq select-enable-clipboard t)
+
+(defun magit-display-buffer-pop-up-frame (buffer)
+  (if (with-current-buffer buffer (eq major-mode 'magit-status-mode))
+      (display-buffer buffer
+                      '((display-buffer-reuse-window
+                         display-buffer-pop-up-frame)
+                        (reusable-frames . t)))
+    (magit-display-buffer-traditional buffer)))
+
+(setq magit-display-buffer-function #'magit-display-buffer-pop-up-frame)
+(customize-set-variable 'exwm-workspace-number 1)
