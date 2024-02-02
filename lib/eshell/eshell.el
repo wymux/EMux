@@ -68,10 +68,10 @@
       ("ccs" "doas cave search --index ~/.cache/cave_all -k ")
       ("cpo" "doas cave owner")
       ("cpx" "doas cave purge")
-      ("cru" "doas cave uninstall")
+      ("cru" nil wymux/eshell-cru nil)
       ("crw" "doas cave resolve world -cx")
       ("crx" "" wymux/eshell-crx nil)
-      ("csh" "doas cave show")
+      ("csh" "" wymux/eshell-csh nil)
       ("csl" "" wymux/exherbo-local-sync nil)
       ("csy" "doas cave sync")
       ("cvtest" "" wymux/exherbo-enable-tests)
@@ -186,8 +186,7 @@
   (let ((command (completing-read "Kill command: " wymux/eshell-history-alist))
 	(str nil))
     (setq str (cdr (assoc command wymux/eshell-history-alist)))
-    (kill-new (format "%s" str))))
- 
+    (kill-new (format "%s" str)))) 
 
 (defun wymux/eshell-ccd-other-window ()
   ""
@@ -196,4 +195,19 @@
       (split-window-horizontally))
   (windmove-right)
   (eshell '99)
-  (wymux/eshell-ccd))
+  (wymux/eshell-ccd)
+  (eshell-send-input))
+
+(defun wymux/eshell-csh ()
+  ""
+  (interactive)
+  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
+    (insert (format "doas cave show %s" cat/pkg)))
+  (eshell-send-input))
+
+(defun wymux/eshell-cru ()
+  ""
+  (interactive)
+  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
+    (insert (format "doas cave uninstall %s" cat/pkg)))
+  (eshell-send-input))

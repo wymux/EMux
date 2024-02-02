@@ -127,6 +127,7 @@
 (setq exwm-input-global-keys
       `(
 	([?\s-r] . exwm-reset)
+	([?\s-t] . exwm-input-release-keyboard)
 	([kp-end] . save-buffers-kill-emacs)
 	([f1] . wymux/darken)
 	([f2] . wymux/brighten)
@@ -145,7 +146,7 @@
 	([?\s-s] . mh-smail)
 	([?\s-d] . delete-frame)
 	([?\s-u] . ffap)
-	([f9] . other-frame)
+	([?\s-o] . other-frame)
 	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
 	([f12] . wymux/chromium)
@@ -315,12 +316,16 @@
       ("w" . move-end-of-line)
       ("s" . mark-defun)
       ("m" . imenu)
+      ("fw" . xah-search-current-word)
       ("fb" . duplicate-dwim)
+      ("fj" . dired-jump)
+      
       ("xo" . wymux/format-buffer)
       ("xi" . wymux/find-exherbo)
       ("xf" . find-file)
       ("xr" . recentf-open)
       ("xu" . save-buffer)
+      
       ("\\[" . beginning-of-buffer)
       ("\\]" . end-of-buffer)
       ("\\f" . wymux/emms-play-find)
@@ -410,7 +415,8 @@
       :substates '("exheres")
       :bind
       '((" g" . wymux/exherbo-rename)
-	(" e" . wymux/eshell-ccd-other-window))) 
+	(" e" . wymux/eshell-ccd-other-window)
+	(" x" . wymux/exherbo-compile))) 
 
     (modaled-enable-substate-on-state-change
       "exheres"
@@ -750,3 +756,74 @@
 	 (buffer-substring-no-properties (match-beginning 0) (match-end 0))
 	 url-list)))
     (browse-url (completing-read "Goto: " url-list))))
+
+(defun xah-search-current-word ()
+  "Call `isearch' on current word or text selection.
+“word” here is A to Z, a to z, and hyphen 「-」 and underline 「_」, independent of syntax table.
+URL `http://ergoemacs.org/emacs/modernization_isearch.html'
+Version 2015-04-09"
+  (interactive)
+  (let ( -p1 -p2 )
+    (if (use-region-p)
+        (progn
+          (setq -p1 (region-beginning))
+          (setq -p2 (region-end)))
+      (save-excursion
+        (skip-chars-backward "-_A-Za-z0-9")
+        (setq -p1 (point))
+        (right-char)
+        (skip-chars-forward "-_A-Za-z0-9")
+        (setq -p2 (point))))
+    (setq mark-active nil)
+    (when (< -p1 (point))
+      (goto-char -p1))
+    (isearch-mode t)
+    (isearch-yank-string (buffer-substring-no-properties -p1 -p2))))
+
+(defun wymux/insert-exherbo-cat-pkg ()
+  ""
+  (interactive)
+  (let ((cat/pkg (wymux/exherbo-cat-pkg)))
+    (insert cat/pkg)))
+
+(keymap-global-set "C-c C-e" 'wymux/insert-exherbo-cat-pkg)
+
+(defun wymux/exherbo-cee ()
+  "cmake options"
+  (interactive)
+  (let ((option (read-from-minibuffer "OPTION: "))
+	(boolean (completing-read "BOOLEAN: " '("FALSE" "TRUE"))))
+    (insert (format "-D%s:BOOL=%s" option boolean))))
+
+(progn
+  (when (boundp 'exheres-mode-abbrev-table)
+    (clear-abbrev-table exheres-mode-abbrev-table))
+  (define-abbrev-table 'exheres-mode-abbrev-table
+    '(("ee" "--enable-")
+      ("dd" "--disable")
+      ("ww" "--with")
+      ("wo" "--without")
+      ("cee" "" exherbo-cee)
+      ("cscb" "CMAKE_SRC_CONFIGURE_OPTION_BUILDS")
+      ("csce" "CMAKE_SRC_CONFIGURE_OPTION_ENABLES")
+      ("cscp" "CMAKE_SRC_CONFIGURE_PARAMS")
+      ("cscp" "CMAKE_SRC_CONFIGURE_OPTIONS")
+      ("csct" "CMAKE_SRC_CONFIGURE_TESTS")
+      ("cscw" "CMAKE_SRC_CONFIGURE_OPTION_WANTS")
+      ("cscwi" "CMAKE_SRC_CONFIGURE_OPTION_WITHS")
+      ("csip" "CMAKE_SRC_INSTALL_PARAMS")
+      ("mscf" "MESON_SRC_CONFIGURE_OPTION_FEATURES")
+      ("msco" "MESON_SRC_CONFIGURE_OPTIONS")
+      ("mscp" "MESON_SRC_CONFIGURE_PARAMS")
+      ("mscs" "MESON_SRC_CONFIGURE_OPTION_SWITCHES")
+      ("msct" "MESON_SRC_CONFIGURE_TESTS")
+      
+      ("ccc" "" wymux/insert-exherbo-cat-pkg))))
+
+(defun wymux/exherbo-compile ()
+  ""
+  (interactive)
+  (project-eshell)
+  (wymux/exherbo-local-sync)
+  (insert " && ")
+  (wymux/eshell-crx))
