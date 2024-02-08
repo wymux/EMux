@@ -3,7 +3,7 @@
       (expand-file-name "root/etc/" user-emacs-directory))
 (setq no-littering-var-directory
       (expand-file-name "root/var/" user-emacs-directory))
- 
+
 (add-to-list 'load-path "~/Internet/Git/Emacs/no-littering/")
 (require 'no-littering)
 
@@ -22,8 +22,10 @@
   (set-foreground-color "#FFFFFF")
   (set-background-color "#000000")
   (setq wymux-light-theme nil)
+  (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))
   (modify-all-frames-parameters '((background-color . "black")
-				      (foreground-color . "white"))))
+				  (foreground-color . "white")))
+  (set-face-attribute 'default nil :family "Berkeley Mono" :height 130))
 
 (defun wymux/bright-theme ()
   ""
@@ -31,8 +33,10 @@
   (set-foreground-color "#000000")
   (set-background-color "#FFFFFF")
   (setq wymux-light-theme t)
+  (setq browse-url-chromium-arguments '("--disable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-light" "--new-tab" ))
   (modify-all-frames-parameters '((background-color . "white")
-				      (foreground-color . "black"))))
+				  (foreground-color . "black")))
+  (set-face-attribute 'default nil :family "Berkeley Mono" :height 130))
 
 (defun wymux/select-theme ()
   ""
@@ -804,6 +808,7 @@ Version 2015-04-09"
       ("dd" "--disable")
       ("ww" "--with")
       ("wo" "--without")
+      ("dspp" "DEFAULT_SRC_PREPARE_PATCHES ")
       ("cee" "" exherbo-cee)
       ("cscb" "CMAKE_SRC_CONFIGURE_OPTION_BUILDS")
       ("csce" "CMAKE_SRC_CONFIGURE_OPTION_ENABLES")
@@ -843,6 +848,27 @@ Version 2015-04-09"
       ("mscs" "MESON_SRC_CONFIGURE_OPTION_SWITCHES")
       ("msct" "MESON_SRC_CONFIGURE_TESTS")
       ("ccc" "" wymux/insert-exherbo-cat-pkg))))
+
+(defun wymux/abbrev-hook-function ()
+  ""
+  t)
+(put 'wymux/abbrev-hook-function 'no-self-insert t)
+
+(defun wymux/minibuffer-cinit ()
+  ""
+  (insert "~/.config/emacs/init.el")
+  (minibuffer-complete-and-exit))
+
+(defun wymux/minibuffer-ceinit ()
+  ""
+  (insert "~/.config/emacs/early-init.el")
+  (minibuffer-complete-and-exit))
+
+(progn
+  (when (boundp 'minibuffer-mode-abbrev-table)
+    (clear-abbrev-table minibuffer-mode-abbrev-table))
+  (define-abbrev-table 'minibuffer-mode-abbrev-table
+    '(("cinit" "" wymux/minibuffer-cinit))))
 
 (defun wymux/exherbo-compile ()
   ""
