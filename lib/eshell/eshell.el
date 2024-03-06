@@ -4,26 +4,27 @@
 (defun wymux/eshell-ug ()
   ""
   (interactive)
-  (insert "cd ~/Internet/Git/")
-  (eshell-send-input))
+  (wymux/eshell-abbrev "cd ~/Internet/Git/"))
 
 (defun wymux/eshell-umx ()
   ""
   (interactive)
-  (insert "cd ~/Internet/Git/Exherbo/")
-  (eshell-send-input))
+  (wymux/eshell-abbrev "cd ~/Internet/Git/Exherbo/"))
 
 (defun wymux/eshell-um ()
   ""
   (interactive)
-  (insert "cd ~/Media/Musica")
-  (eshell-send-input))
+  (wymux/eshell-abbrev "cd ~/Media/Musica"))
+
+(defun wymux/eshell-ud ()
+  ""
+  (interactive)
+  (wymux/eshell-abbrev "~/Media/Document/"))
 
 (defun wymux/eshell-ugp ()
   ""
   (interactive)
-  (insert "cd ~/Internet/Git/Project/")
-  (eshell-send-input))
+  (wymux/eshell-abbrev "cd ~/Internet/Git/Project/"))
 
 (defun wymux/eshell-umxx ()
   ""
@@ -52,8 +53,12 @@
 (defun wymux/ums ()
   ""
   (interactive)
-  (insert "cd ~/Internet/Git/Site/Shoash/")
-  (eshell-send-input))
+  (wymux/eshell-abbrev "cd ~/Internet/Git/Site/Shoash/"))
+
+(defun wymux/eshell-pkcfa ()
+  ""
+  (interactive)
+  (insert "packwiz curseforge add \""))
 
 (progn
   (when (boundp 'eshell-mode-abbrev-table)
@@ -84,6 +89,7 @@
       ("gtcmt" "git commit -S -m \" \"")
       ("gtsc" "git switch -c")
       ("mkcd" "" wymux/eshell-mk nil)
+      ("ud" "" wymux/eshell-ud nil)
       ("ug" "" wymux/eshell-ug nil)
       ("ugp" "" wymux/eshell-ugp)
       ("um" "" wymux/eshell-um nil)
@@ -91,6 +97,7 @@
       ("umx" "" wymux/eshell-umx nil)
       ("umxx" "" wymux/eshell-umxx nil)
       ("ro" "" wymux/open-document nil)
+      ("pkcfa" "packwiz curseforge add \""  wymux/abbrev-hook-function)
       ("kil" "" wymux/eshell-kill-command))))
 
 (progn

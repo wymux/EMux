@@ -25,7 +25,7 @@
   (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))
   (modify-all-frames-parameters '((background-color . "black")
 				  (foreground-color . "white")))
-  (set-face-attribute 'default nil :family "Berkeley Mono" :height 130))
+  (set-face-attribute 'default nil :family "Berkeley Mono" :height 150))
 
 (defun wymux/bright-theme ()
   ""
@@ -130,12 +130,9 @@
 
 (setq exwm-input-global-keys
       `(
-	([?\s-r] . exwm-reset)
-	([?\s-t] . exwm-input-release-keyboard)
 	([kp-end] . save-buffers-kill-emacs)
 	([f1] . wymux/darken)
 	([f2] . wymux/brighten)
-	([?\s-w] . wymux/chromium-light)
 	([kp-begin] . other-window)
 	([kp-up] . split-window-vertically)
 	([kp-home] . split-window-horizontally)
@@ -156,16 +153,14 @@
 	([f12] . wymux/chromium)
 	([print] . wymux/scrot)
  	([kp-multiply] . previous-buffer)
-	([kp-divide] . next-buffer)
-	))
+	([kp-divide] . next-buffer)))
 
 (require 'exwm-randr)
 (add-hook 'exwm-randr-screen-change-hook
-          (lambda ()
-            (start-process-shell-command
-             "xrandr" nil "xrandr --output DP-1-0 --above eDP-1 --mode 3440x1440 --rate 120")))
+         (lambda ()
+           (start-process-shell-command
+            "xrandr" nil "xrandr --output DP-1-0 --primary --rate 144 --mode 3440x1440 --output eDP-1 --off")))
 (exwm-randr-enable)
-
 (customize-set-variable 'ediff-window-setup-function 'ediff-setup-windows-plain)
 
 (defun wymux/customize-set-variable ()
@@ -255,7 +250,7 @@
 
 (emms-player-set emms-player-mpd
 		 'regex
-		 "\\(flac\\|mp3\\|ape\\)$")
+		 "\\(flac\\|mp3\\|ape\\|wav\\)$")
 
 (load-file "~/Internet/Git/Emacs/emacs-eat/eat.elc")
 
@@ -323,13 +318,11 @@
       ("fw" . xah-search-current-word)
       ("fb" . duplicate-dwim)
       ("fj" . dired-jump)
-      
       ("xo" . wymux/format-buffer)
       ("xi" . wymux/find-exherbo)
       ("xf" . find-file)
       ("xr" . recentf-open)
-      ("xu" . save-buffer)
-      
+      ("xu" . save-buffer)      
       ("\\[" . beginning-of-buffer)
       ("\\]" . end-of-buffer)
       ("\\f" . wymux/emms-play-find)
@@ -448,8 +441,9 @@
       ("fm" . back-to-indentation)
       ("\'" . move-beginning-of-line)
       ("\"" . move-end-of-line)
-      ("s" . mark-defun)
+      ("ex" . mark-defun)
       ("m" . imenu)
+      ("x" . upcase-word)
       ("ey" . duplicate-dwim)
       ("ev" . wymux/format-buffer)
       ("eo" . find-file)
@@ -461,6 +455,9 @@
       ("ee" . emms)
       ("ed" . emms-play-directory-tree)
       ("en" . magit)
+      ("eb" . revert-buffer-quick)
+      ("ey" . magit)
+      ("eg" . dired-jump)
       ("e<backspace>" . compile)
       ("et" . wymux/search-www)
       ("er" . wymux/open-document)
@@ -481,7 +478,7 @@
       ("r" . backward-kill-word)
       ("m" . kill-word)
       ("c" . kill-sexp)
-      ("v" . kill-whole-line)
+      ("u" . kill-whole-line)
       ("b" . kill-region)
       ("`" . delete-char)
       ("er" . replace-string)
@@ -491,9 +488,59 @@
       ("@a" . describe-variable)
       ("@m" . man)
       ("@he" . apropos-function)
-      ("v" . wymux/modaled-insert-state))))
+      ("@hc" . apropos-command)
+      ("@b" . wymux/find-exherbo)
+      ("v" . wymux/modaled-insert-state))
+    
+    (modaled-define-substate "exheres")
+    (modaled-define-keys
+      :substates '("exheres")
+      :bind
+      '((" u" . wymux/exherbo-rename)
+	(" e" . wymux/eshell-ccd-other-window)
+	(" x" . wymux/exherbo-compile)))
 
-(wymux/modaled-qwerty)
+    (modaled-enable-substate-on-state-change
+      "exheres"
+      :states '("normal")
+      :major '(exheres-mode))
+
+    (modaled-define-substate "engram-dired")
+    (modaled-define-keys
+      :substates '("engram-dired")
+      :bind
+      '(("d" . dired-previous-line)
+	("t" . dired-next-line)
+	("r" . dired-do-rename)
+	("c" . dired-copy)
+	("w" . dired-copy-filename-as-kill)
+	("\"" . dired-goto-file)
+	("l" . dired-mark)
+	("x" . dired-delete)
+	("g" . revert-buffer)
+	("y" . dired-hide-subdir)
+	("b" . dired-up-directory)
+	("m" . mkdir)))
+    
+    (modaled-enable-substate-on-state-change
+      "engram-dired"
+      :states '("normal")
+      :major '(dired-mode))
+
+    (modaled-define-substate "eglot-engram")
+    (modaled-define-keys
+      :substates '("eglot-engram")
+      :bind
+      '((" e" . eglot-code-actions)
+	(" t" . flymake-goto-next-error)))
+
+    (modaled-enable-substate-on-state-change
+      "eglot-engram"
+      :states '("normal")
+      :minor '(eglot--managed-mode))
+))
+
+(wymux/modaled-engram)
 
 (defun wymux/exherbo-rename ()
   ""
@@ -505,7 +552,7 @@
     (find-file new-file-name)))
 
 (modaled-define-default-state
-  '("insert" wdired-mode eshell-mode eat-eshell-mode
+  '("insert" wdired-mode eshell-mode eat-eshell-mode compilation-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
     magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
     magit-diff-mode exwm-mode gnus-summary-mode gnus-group-mode-hook
@@ -514,7 +561,7 @@
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
-  ""
+  "" 
   (interactive)
   (modaled-set-state "insert"))
 
@@ -531,6 +578,7 @@
 
 (add-hook 'typescript-ts-mode-hook 'eglot-ensure)
 
+(customize-set-variable 'recentf-max-saved-items 1000)
 (recentf-mode 1)
 
 (customize-set-variable 'treesit-font-lock-level 0)
@@ -629,8 +677,8 @@
 (customize-set-variable 'read-file-name-completion-ignore-case t)
 (customize-set-variable 'read-buffer-completion-ignore-case t)
 (customize-set-variable 'completion-ignore-case t)
-
-(customize-set-variable 'backup-directory-alist '(("." . "~/Media/Document/Archive/Emacs/Edit")))
+(customize-set-variable 'backup-directory-alist
+			'(("." . "~/Media/Document/Archive/Emacs/Edit")))
 (customize-set-variable 'delete-old-versions t)
 (customize-set-variable 'version-control t)
 (customize-set-variable 'kept-new-versions 20)
@@ -849,6 +897,12 @@ Version 2015-04-09"
       ("msct" "MESON_SRC_CONFIGURE_TESTS")
       ("ccc" "" wymux/insert-exherbo-cat-pkg))))
 
+(progn
+  (when (boundp 'c-mode-abbrev-table)
+    (clear-abbrev-table c-mode-abbrev-table))
+  (define-abbrev-table 'c-mode-abbrev-table
+    '(("null" "NULL"))))
+
 (defun wymux/abbrev-hook-function ()
   ""
   t)
@@ -879,3 +933,16 @@ Version 2015-04-09"
   (insert " && ")
   (insert (format "doas cave resolve -x %s" (car (vc-git-branches))))
   (eshell-send-input))
+
+(defun wymux/thing-at-point-exheres ()
+  ""
+  (interactive)
+  (let ((p1 nil)
+	(p2 nil))
+    (search-backward "\"")
+    (forward-char 1)
+  (setq p1 (point))
+  (search-forward "\"")
+  (backward-char 1)
+  (setq p2 (point))
+  (message (buffer-substring-no-properties p1 p2))))
