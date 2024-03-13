@@ -1,19 +1,52 @@
 (add-to-list 'load-path "~/Internet/Git/Emacs/compat/")
+
+(add-to-list 'load-path "~/Internet/Git/Emacs/xelb")
+(add-to-list 'load-path "~/Internet/Git/Emacs/exwm")
+(add-to-list 'load-path "~/Internet/Git/Emacs/hotfuzz/")
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/emms/")
+
+(add-to-list 'load-path "~/Internet/Git/Emacs/iter2/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/s.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/f.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/editorconfig-emacs/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/nvm.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/with-editor/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/dash.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/transient/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/magit/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
+
 (setq no-littering-etc-directory
       (expand-file-name "root/etc/" user-emacs-directory))
 (setq no-littering-var-directory
       (expand-file-name "root/var/" user-emacs-directory))
 
 (add-to-list 'load-path "~/Internet/Git/Emacs/no-littering/")
-(require 'no-littering)
 
+(require 'no-littering)
 (require 'recentf)
+(require 'eglot)
+(require 'emms)
+(require 'emms-history)
+(require 'emms-playlist-mode)
+(require 'emms-player-mpd)
+(require 'emms-setup)
+(require 'package)
+(require 'transient)
+(require 'magit)
+(require 'wdired)
+(require 'exwm)
+(require 'exwm-config)
+(require 'exwm-randr)
+(require 'hotfuzz)
+
 (add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-var-directory))
+	     (recentf-expand-file-name no-littering-var-directory))
 (add-to-list 'recentf-exclude
-             (recentf-expand-file-name no-littering-etc-directory))
+	     (recentf-expand-file-name no-littering-etc-directory))
 
 (load-file "~/.config/emacs/lib/eshell/eshell.elc")
+
 (defvar wymux-light-theme t)
 
 (defun wymux/dark-theme ()
@@ -53,18 +86,21 @@
     (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))))
 
 (wymux/select-theme)
-(wymux/dark-theme)
+(wymux/bright-theme)
 (wymux/chromium-theme)
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
 (customize-set-variable 'inhibit-splash-screen t)
-(add-to-list 'load-path "~/Internet/Git/Emacs/xelb")
-(add-to-list 'load-path "~/Internet/Git/Emacs/exwm")
 
-(require 'exwm)
-(require 'exwm-config)
 (exwm-enable)
 (exwm-config-example)
+
+(defun wymux/customize-set-variable ()
+  ""
+  (interactive)
+  (let ((basestr "(customize-set-variable \'")
+	(var (symbol-name (read-variable "Customize: "))))
+    (insert (concat basestr var " nil" ")" "\n"))))
 
 (defun wymux/brighten ()
   "Increase monitor brightness."
@@ -126,7 +162,30 @@
 (defun wymux/prismlauncher ()
   ""
   (interactive)
-  (start-process "PrismLauncher" "PrismLauncher" "prismlauncher")) 
+  (start-process "PrismLauncher" "PrismLauncher" "prismlauncher"))
+
+(defun wymux/exherbo-compile ()
+  ""
+  (interactive)
+  (project-eshell)
+  (eshell/clear)
+  (wymux/exherbo-local-sync)
+  (insert " && ")
+  (insert (format "doas cave resolve -x %s" (car (vc-git-branches))))
+  (eshell-send-input))
+
+(defun wymux/thing-at-point-exheres ()
+  ""
+  (interactive)
+  (let ((p1 nil)
+	(p2 nil))
+    (search-backward "\"")
+    (forward-char 1)
+    (setq p1 (point))
+    (search-forward "\"")
+    (backward-char 1)
+    (setq p2 (point))
+    (message (buffer-substring-no-properties p1 p2))))
 
 (setq exwm-input-global-keys
       `(
@@ -142,6 +201,7 @@
 	([kp-prior] . mh-rmail)
 	([kp-subtract] . gnus)
 	([kp-right] . eshell)
+	([kp-next] . balance-windows)
 	([kp-add] . project-eshell)
 	([?\s-e] . emms)
 	([?\s-s] . mh-smail)
@@ -152,23 +212,15 @@
 	([f11] . wymux/scrot-all)
 	([f12] . wymux/chromium)
 	([print] . wymux/scrot)
- 	([kp-multiply] . previous-buffer)
+	([kp-multiply] . previous-buffer)
 	([kp-divide] . next-buffer)))
 
-(require 'exwm-randr)
 (add-hook 'exwm-randr-screen-change-hook
-         (lambda ()
-           (start-process-shell-command
-            "xrandr" nil "xrandr --output DP-1-0 --primary --rate 144 --mode 3440x1440 --output eDP-1 --off")))
+	  (lambda ()
+	    (start-process-shell-command
+	     "xrandr" nil "xrandr --output DP-1-0 --primary --rate 144 --mode 3440x1440 --output eDP-1 --off")))
 (exwm-randr-enable)
 (customize-set-variable 'ediff-window-setup-function 'ediff-setup-windows-plain)
-
-(defun wymux/customize-set-variable ()
-  ""
-  (interactive)
-  (let ((basestr "(customize-set-variable \'")
-	(var (symbol-name (read-variable "Customize: "))))
-    (insert (concat basestr var " nil" ")" "\n"))))
 
 (setq-default abbrev-mode t)
 
@@ -178,6 +230,14 @@
 (keymap-global-set "C-<backspace>" 'kill-whole-line)
 (keymap-global-set "C-w" 'completion-at-point)
 (keymap-global-set "C-i" 'dabbrev-expand)
+(keymap-set minibuffer-mode-map "+" 'minibuffer-complete)
+(keymap-set isearch-mode-map "<up>" 'isearch-ring-retreat)
+(keymap-set isearch-mode-map "<down>" 'isearch-repeat-advance)
+(keymap-set isearch-mode-map "<left>" 'isearch-repeat-backward)
+(keymap-set isearch-mode-map "<right>" 'isearch-repeat-forward)
+(keymap-set isearch-mode-map "C-l" 'isearch-yank-kill)
+(keymap-set minibuffer-local-isearch-map "<left>" 'isearch-reverse-exit-minibuffer)
+(keymap-set minibuffer-local-isearch-map "<right>" 'isearch-forward-exit-minibuffer)
 
 (load-file "/usr/share/mailutils/mh/mailutils-mh.el")
 
@@ -201,8 +261,6 @@
 
 (add-hook 'mh-inc-folder-hook 'wymux/mh-inc-folder-hook)
 
-(add-to-list 'load-path "~/Internet/Git/Emacs/hotfuzz/")
-(require 'hotfuzz)
 (customize-set-variable 'completion-styles '(hotfuzz))
 (add-hook 'icomplete-minibuffer-setup-hook
 	  (lambda () (setq-local completion-styles '(hotfuzz))))
@@ -230,15 +288,6 @@
   (if (eq major-mode 'emacs-lisp-mode)
       (elisp-byte-compile-file)))
 (add-hook 'after-save-hook 'wymux/save)
-
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/emms/")
-
-(require 'eglot)
-(require 'emms)
-(require 'emms-history)
-(require 'emms-playlist-mode)
-(require 'emms-player-mpd)
-(require 'emms-setup)
 
 (customize-set-variable 'emms-player-mpd-server-name "localhost")
 (customize-set-variable 'emms-player-mpd-server-port "6600")
@@ -273,11 +322,11 @@
   (indent-region (goto-char (point-min)) (goto-char (point-max))))
 
 (load-file "~/Internet/Git/Emacs/modaled/modaled.el")
+(load-file "~/.config/emacs/lib/xah-fly-keys/xah-fly-keys.el")
 
 (modaled-define-state "normal"
   :lighter "[NOR]"
   :cursor-type 'box)
-
 
 (modaled-define-state "insert"
   :lighter "[INS]"
@@ -287,139 +336,9 @@
 (modaled-define-keys
   :states '("insert" "normal")
   :bind
-  '(
-    ([escape] . modaled-set-default-state)
+  '(([escape] . modaled-set-default-state)
     ([ESCAPE] . modaled-set-default-state)
-    ([C-c C-h] . wymux/modaled-normal-state)
-    ))
-
-(defun wymux/modaled-qwerty ()
-  ""
-  (interactive)
-  (modaled-define-keys
-    :states '("normal")
-    :bind
-    `(("k" . backward-char)
-      (";" . forward-char)
-      ("o" . previous-line)
-      ("l" . next-line)
-      ("[" . backward-paragraph)
-      ("]" . forward-paragraph)
-      ("g" . set-mark-command)
-      ("a" . execute-extended-command)
-      ("," . backward-whitespace)
-      ("." . forward-whitespace)
-      ("t" . repeat)
-      ("\\m" . back-to-indentation)
-      ("q" . move-beginning-of-line)
-      ("w" . move-end-of-line)
-      ("s" . mark-defun)
-      ("m" . imenu)
-      ("fw" . xah-search-current-word)
-      ("fb" . duplicate-dwim)
-      ("fj" . dired-jump)
-      ("xo" . wymux/format-buffer)
-      ("xi" . wymux/find-exherbo)
-      ("xf" . find-file)
-      ("xr" . recentf-open)
-      ("xu" . save-buffer)      
-      ("\\[" . beginning-of-buffer)
-      ("\\]" . end-of-buffer)
-      ("\\f" . wymux/emms-play-find)
-      ("\\e" . emms)
-      ("\\d" . emms-play-directory-tree)
-      ("\\n" . magit)
-      ("\\<backspace>" . compile)
-      ("\\t" . wymux/search-www)
-      ("\\r" . wymux/open-document)
-      ("u" . backward-word)
-      ("i" . forward-word)
-      ("ff" . forward-sexp)
-      ("fd" . backward-sexp)
-      ("fi" . switch-to-buffer)
-      ("f\\" . project-compile)
-      ("f]" . project-find-file)
-      ("f[" . mark-whole-buffer)
-      ("fp" . ffap)
-      ("fo" . occur)
-      ("ft" . rgrep)
-      ("fx" . exchange-point-and-mark)
-      ("fu" . pop-global-mark)
-      ("f'" . ispell-buffer)
-      ("n" . isearch-forward)
-      ("y" . yank)
-      ("j" . undo)
-      ("e" . backward-kill-word)
-      ("r" . kill-word)
-      ("c" . kill-sexp)
-      ("/" . kill-whole-line)
-      ("b" . kill-region)
-      ("`" . delete-char)
-      ("fr" . replace-string)
-      ("fe" . replace-regexp)
-      ("z" . recenter-top-bottom)
-      ("hc" . describe-key)
-      ("hf" . describe-function)
-      ("hv" . describe-variable)
-      ("hm" . man)
-      ("haf" . apropos-function)
-      ("p" . wymux/modaled-insert-state))
-    
-    (modaled-define-substate "emacs-lisp")
-    (modaled-define-keys
-      :substates '("emacs-lisp")
-      :bind
-      '((" x" . eval-defun)))
-
-    (modaled-enable-substate-on-state-change
-      "emacs-lisp"
-      :states '("normal")
-      :major '(emacs-lisp-mode))
-
-    (modaled-define-substate "dired")
-    (modaled-define-keys
-      :substates '("dired")
-      :bind
-      '(("o" . dired-previous-line)
-	("l" . dired-next-line)
-	("m" . dired-create-directory)
-	("t" . dired-up-directory)
-	("r" . dired-do-rename)
-	("q" . wymux/dired-write)
-	("x" . dired-do-delete)
-	("u" . dired-mark)
-	))
-
-    (modaled-enable-substate-on-state-change
-      "dired"
-      :states '("normal")
-      :major '(dired-mode))
-
-    (modaled-define-substate "eglot")
-    (modaled-define-keys
-      :substates '("eglot")
-      :bind
-      '((" g" . eglot-code-actions)
-	(" u" . flymake-goto-next-error)))
-
-    (modaled-enable-substate-on-state-change
-      "eglot"
-      :states '("normal")
-      :minor '(eglot--managed-mode))
-
-    (modaled-define-substate "exheres")
-    (modaled-define-keys
-      :substates '("exheres")
-      :bind
-      '((" g" . wymux/exherbo-rename)
-	(" e" . wymux/eshell-ccd-other-window)
-	(" x" . wymux/exherbo-compile)))
-
-    (modaled-enable-substate-on-state-change
-      "exheres"
-      :states '("normal")
-      :major '(exheres-mode))    
-    ))
+    ([C-c C-h] . wymux/modaled-normal-state)))
 
 (defun wymux/modaled-engram ()
   ""
@@ -427,71 +346,247 @@
   (modaled-define-keys
     :states '("normal")
     :bind
-    `(("h" . backward-char)
+    '(("/" . wymux/modaled-insert-state)
+      ("h" . backword-char)
       ("s" . forward-char)
       ("d" . previous-line)
       ("t" . next-line)
-      ("[" . backward-paragraph)
-      ("]" . forward-paragraph)
-      ("g" . set-mark-command)
-      ("a" . execute-extended-command)
-      ("," . backward-whitespace)
-      ("." . forward-whitespace)
-      ("b" . repeat)
-      ("fm" . back-to-indentation)
-      ("\'" . move-beginning-of-line)
-      ("\"" . move-end-of-line)
-      ("ex" . mark-defun)
-      ("m" . imenu)
-      ("x" . upcase-word)
-      ("ey" . duplicate-dwim)
-      ("ev" . wymux/format-buffer)
-      ("eo" . find-file)
-      ("el" . recentf-open)
-      ("eu" . save-buffer)
-      ("e[" . beginning-of-buffer)
-      ("e]" . end-of-buffer)
-      ("ef" . wymux/emms-play-find)
-      ("ee" . emms)
-      ("ed" . emms-play-directory-tree)
-      ("en" . magit)
-      ("eb" . revert-buffer-quick)
-      ("ey" . magit)
-      ("eg" . dired-jump)
-      ("e<backspace>" . compile)
-      ("et" . wymux/search-www)
-      ("er" . wymux/open-document)
-      ("l" . backward-word)
-      ("w" . forward-word)
-      ("-" . forward-sexp)
-      (";" . backward-sexp)
-      ("ei" . switch-to-buffer)
-      ("e\\" . project-compile)
-      ("e_" . project-find-file)
-      ("e`" . mark-whole-buffer)
-      ("ep" . ffap)
-      ("ef" . occur)
-      ("eq" . rgrep)
-      ("n" . isearch-forward)
-      ("y" . yank)
-      ("j" . undo)
-      ("r" . backward-kill-word)
-      ("m" . kill-word)
-      ("c" . kill-sexp)
-      ("u" . kill-whole-line)
-      ("b" . kill-region)
-      ("`" . delete-char)
-      ("er" . replace-string)
-      ("ee" . replace-regexp)
-      ("z" . recenter-top-bottom)
-      ("@e" . describe-function)
-      ("@a" . describe-variable)
-      ("@m" . man)
-      ("@he" . apropos-function)
-      ("@hc" . apropos-command)
-      ("@b" . wymux/find-exherbo)
-      ("v" . wymux/modaled-insert-state))
-    
+
+      (" oo" . highlight-symbol-at-point)
+      (" ol" . unhighlight-regexp)
+      (" od" . highlight-lines-matching-regexp)
+      (" oh" . highlight-regexp)
+      (" ot" . highlight-phrase)
+      (" oa" . isearch-forward-symbol-at-point)
+      (" oe" . isearch-forward-symbol)
+      (" ou" . isearch-forword-word)
+
+      (" yt" . xref-find-definitions)
+      (" ys" . xref-pop-marker-stack)
+
+      (" _" . mark-whole-buffer)
+      (" ]" . beginning-of-buffer)
+      (" \[" . end-of-buffer)
+
+      (" dy" . ibuffer)
+      (" do" . find-file)
+      (" dv" . bookmark-bmenu-list)
+      (" da" . ibuffer)
+      (" dh" . recentf-open-files)
+      (" dd" . bookmark-set)
+      (" dw" . bookmark-jump)
+      (" ds" . write-file)
+
+      (" adw" . expand-region-abbrev)
+      (" adt" . edit-abbrev)
+      (" ade" . expand-abbrev)
+      (" adl" . add-mode-abbrev)
+      (" add" . add-global-abbrev)
+      (" adr" . inverse-add-mode-abbrev)
+      (" adm" . inverse-add-global-abbrev)
+      (" ad\"" . unexpand-abbrev)
+      (" adh" . expand-jump-top-previous-slot)
+      (" ads" . expand-jump-to-next-slot)
+      (" ad'" . abbrev-prefix-mark)
+
+      (" aj" . insert-char)
+
+      (" ha" . apropos-command)
+      (" hb" . describe-bindings)
+      (" hc" . describe-char)
+      (" hd" . apropos-documentation)
+      (" he" . view-echo-area-messages)
+      (" hf" . describe-face)
+      (" hg" . info-lookup-symbol)
+      (" hh" . describe-function)
+      (" hi" . info)
+      (" hj" . man)
+      (" hk" . describe-key)
+      (" hl" . view-lossage)
+      (" hm" . describe-mode)
+      (" hn" . describe-variable)
+      (" ho" . describe-language-environment)
+      (" hr" . apropos-variable)
+      (" hs" . describe-syntax)
+      (" hu" . elisp-index-search)
+      (" hv" . apropos-value)
+      (" hx" . describe-command)
+      (" hz" . describe-coding-system)
+      (" h," . kill-line)
+      (" hq" . recenter-top-bottom)
+      (" hr" . dired-jump)
+
+      (" s " . whitespace-mode)
+      (" sy" . abbrev-mode)
+      (" s1" . set-input-method)
+      (" s2" . global-hl-line-mode)
+      (" s4" . global-display-line-numbers-mode)
+      (" s6" . calendar)
+      (" s7" . calc)
+      (" s9" . shell-command)
+      (" s0" . shell-command-on-region)
+      (" sa" . insert-char)
+      (" sc" . text-scale-adjust)
+      (" s;" . toggle-debug-on-error)
+      (" sd" . toggle-case-fold-search)
+      (" s." . narrow-to-page)
+      (" sa" . eshell)
+      (" sh" . wider)
+      (" se" . make-frame-command)
+      (" sk" . menu-bar-open)
+      (" sv" . toggle-word-wrap)
+      (" sr" . jump-to-register)
+      (" si" . variable-pitch-mode)
+      (" su" . read-only-mode)
+      (" sd" . count-words)
+      (" sn" . count-matches)
+      (" st" . narrow-to-defun)
+      (" se" . shell)
+      (" sp" . visual-line-mode)
+      (" sf" . eww)
+      (" s-" . save-some-buffers)
+      (" s'" . toggle-truncate-lines)
+      (" s@" . abort-recursive-edit)
+      
+      (" i" . exchange-mark-and-point)
+      (" u" . query-replace)
+      
+      (" w " . rectangle-mark-mode)
+      (" wy" . apply-macro-to-region-lines)
+      (" wo" . kmacro-sttert-macro)
+      (" w3" . number-to-register)
+      (" w4" . increment-register)
+      (" wd" . replace-rectangle)
+      (" w." . delete-rectangle)
+      (" wa" . call-last-kbd-macro)
+      (" wx" . kill-rectangle)
+      (" wj" . copy-rectangle-to-register)
+      (" wk" . yank-rectangle)
+      (" wv" . clear-rectangle)
+      (" ws" . rectangle-number-lines)
+      (" wi" . open-rectangle)
+      (" wu" . kmacro-end-macro)
+      (" w'" . delete-whitespace-rectangle)
+
+      (" n" . save-buffer)
+      (" t<up>"  . xah-move-block-up)
+      (" t<down>"  . xah-move-block-down)
+
+      (" t," . sort-numeric-fields)
+      (" t." . xah-sort-lines)
+      (" t1" . xah-append-to-register-1)
+      (" t2" . xah-clear-register-1)
+      (" t3" . xah-copy-to-register-1)
+      (" t4" . xah-paste-from-register-1)
+      (" t7" . xah-append-to-register-1)
+      (" t8" . xah-clear-register-1)
+
+      (" tc" . xah-reformat-to-sentence-lines)
+      (" t." . mark-defun)
+      (" ta" . list-matching-lines)
+      (" t\"" . move-to-column)
+      (" tl" . goto-line)
+      (" th" . repeat-complex-command)
+      (" t," . delete-non-matching-lines)
+      (" tj" . copy-to-register)
+      (" tk" . insert-register)
+      (" tv" . xah-escape-quotes)
+      (" tr" . xah-make-backup-and-save)
+      (" ts" . goto-char)
+      (" ti" . xah-clean-whitespace)
+      (" tu" . query-replace-regexp)
+      (" tx" . xah-cut-text-in-quote)
+      (" tt" . repeat)
+      (" te" . delete-matching-lines)
+
+      (" tm" . xah-next-window-or-frame)
+      (" t-" . xah-title-case-region-or-line)
+      (" t'" . delete-duplicate-lines)
+
+      (" e" . switch-to-buffer)
+      (" f" . universal-arg)
+
+      (" mDEL" . xah-delete-current-file-make-backup)
+      (" mo" . eval-buffer)
+      (" ma" . eval-defun)
+      (" mr" . eval-last-sexp)
+      (" mu" . eval-expression)
+      (" me" . eval-region)
+      (" mx" . save-buffers-kill-terminal)
+      (" mm" . delete-frame)
+      (" mj" . xah-run-current-file)
+
+      (" -" . xah-toggle-previous-letter-case)
+      (" '" . xah-show-kill-ring)
+
+      (" @;" . vc-root-diff)   ; D
+      (" @d" . vc-update)      ; git pull, +
+      (" @." . vc-annotate)    ; g
+      (" @\"" . vc-revert)      ; u
+      (" @l" . vc-push)        ; git push, P
+      (" @h" . vc-diff)        ; git diff, =
+      (" @v" . vc-print-root-log) ; L
+      (" @r" . vc-dir)         ; git status, C-x v d
+      (" @s" . vc-print-log)   ; git log, l
+      (" @w" . vc-merge)       ; m
+      (" @t" . vc-register)    ; git add, i
+      (" @@" . vc-next-action) ; v
+      (" @1" . vc-create-tag)            ; s
+      (" @2" . vc-insert-headers)        ; h
+      (" @4" . vc-retrieve-tag)          ; r
+      (" @5" . vc-revision-other-window) ; ~
+      (" @6" . vc-switch-backend)        ; b
+      (" @7" . vc-update-change-log)     ; a
+
+       ("b" . xah-reformat-lines)
+       ("y" . xah-shrink-whitespaces)
+       ("n" . delete-other-windows)
+       ("o" . backward-kill-word)
+       ("z" . hippie-expand)
+       ("g" . xah-comment-dwim)
+       ("[" . split-window-below)
+       ("?" . xah-cycle-hyphen-lowline-space)
+       ("]" . split-window-right)
+       ("+" . other-frame)
+
+       ("1" . xah-backward-punct)
+       ("2" . xah-forward-punct)
+       ("3" . delete-other-windows)
+       ("4" . split-window-below)
+       ("5" . delete-char)
+       ("6" . xah-select-block)
+       ("7" . xah-select-line)
+       ("8" . xah-extend-selection)
+       ("9" . xah-select-text-in-quote)
+       ("0" . xah-pop-local-mark-ring)
+
+       ("c" . execute-extended-command)
+       (";" . isearch-forward)
+       ("d" . previous-line)
+       ("." . xah-beginning-of-line-or-block)
+       ("a" . xah-smart-delete)
+       ("\"" . undo)
+       ("l" . backward-word)
+       ("h" . backward-char)
+       ("," . xah-delete-current-text-block)
+       ("j" . xah-copy-line-or-region)
+       ("k" . xah-paste-or-paste-previous)
+       ("v" . xah-insert-space-before)
+       ("r" . xah-backward-left-bracket)
+       ("s" . forward-char)
+       ("i" . open-line)
+       ("u" . kill-word)
+       ("x" . xah-cut-line-or-region)
+       ("w" . forward-word)
+       ("n" . xah-end-of-line-or-block)
+       ("t" . next-line)
+       ("e" . wymux/modaled-insert-state)
+       ("f" . xah-forward-right-bracket)
+       ("m" . xah-next-window-or-frame)
+       ("-" . xah-toggle-letter-case)
+       ("\'" . set-mark-command)
+       ("p" . xah-goto-matching-bracket))
+
     (modaled-define-substate "exheres")
     (modaled-define-keys
       :substates '("exheres")
@@ -516,12 +611,12 @@
 	("w" . dired-copy-filename-as-kill)
 	("\"" . dired-goto-file)
 	("l" . dired-mark)
-	("x" . dired-delete)
+	("x" . dired-do-delete)
 	("g" . revert-buffer)
 	("y" . dired-hide-subdir)
 	("b" . dired-up-directory)
 	("m" . mkdir)))
-    
+
     (modaled-enable-substate-on-state-change
       "engram-dired"
       :states '("normal")
@@ -537,8 +632,7 @@
     (modaled-enable-substate-on-state-change
       "eglot-engram"
       :states '("normal")
-      :minor '(eglot--managed-mode))
-))
+      :minor '(eglot--managed-mode))))
 
 (wymux/modaled-engram)
 
@@ -583,7 +677,6 @@
 
 (customize-set-variable 'treesit-font-lock-level 0)
 
-(require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (package-initialize)
@@ -594,13 +687,9 @@
 (add-hook 'typescript-ts-mode-hook 'emmet2-mode)
 
 (load-file "~/Internet/Git/Emacs/eacl/eacl.el")
-(load-file "~/Internet/Git/Emacs/vertico/vertico.el")
-(add-to-list 'load-path "~/Internet/Git/Emacs/vertico/extensions/")
 (load-file "~/Internet/Git/Emacs/emacs-websocket/websocket.el")
 (load-file "~/Internet/Git/Emacs/deno-bridge/deno-bridge.el")
 (load-file "~/Internet/Git/Emacs/emmet2-mode/emmet2-mode.el")
-
-(vertico-mode 1)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -615,24 +704,13 @@
  ;; If there is more than one, they won't work right.
  )
 
-(add-to-list 'load-path "~/Internet/Git/Emacs/iter2/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/s.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/f.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/editorconfig-emacs/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/nvm.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/with-editor/lisp/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/dash.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/transient/lisp/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/magit/lisp/")
-(add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
-
-(require 'transient)
-(require 'magit)
 (customize-set-variable 'use-short-answers t)
 (setq package-install-upgrade-built-in t)
 (save-place-mode 1)
 
 (customize-set-variable 'eglot-confirm-server-initiated-edits nil)
+(customize-set-variable 'eglot-lazy-inlay-hints nil)
+(customize-set-variable 'eldoc-mode -1)
 
 (defvar wymux-search-websites '((libgen . "https://libgen.li/index.php?req=%s&res=100")))
 
@@ -779,7 +857,6 @@
   (modaled-dired-substate-mode 1)
   (modaled-insert-state-mode 1))
 
-(require 'wdired)
 (keymap-set wdired-mode-map "C-c C-c" 'wymux/wdired-finish-edit)
 (setq browse-url-browser-function 'browse-url-chromium)
 
@@ -790,9 +867,9 @@
 (defun magit-display-buffer-pop-up-frame (buffer)
   (if (with-current-buffer buffer (eq major-mode 'magit-status-mode))
       (display-buffer buffer
-                      '((display-buffer-reuse-window
-                         display-buffer-pop-up-frame)
-                        (reusable-frames . t)))
+		      '((display-buffer-reuse-window
+			 display-buffer-pop-up-frame)
+			(reusable-frames . t)))
     (magit-display-buffer-traditional buffer)))
 
 (setq magit-display-buffer-function #'magit-display-buffer-pop-up-frame)
@@ -812,21 +889,21 @@
 
 (defun xah-search-current-word ()
   "Call `isearch' on current word or text selection.
-“word” here is A to Z, a to z, and hyphen 「-」 and underline 「_」, independent of syntax table.
-URL `http://ergoemacs.org/emacs/modernization_isearch.html'
-Version 2015-04-09"
+  “word” here is A to Z, a to z, and hyphen 「-」 and underline 「_」, independent of syntax table.
+  URL `http://ergoemacs.org/emacs/modernization_isearch.html'
+  Version 2015-04-09"
   (interactive)
   (let ( -p1 -p2 )
     (if (use-region-p)
-        (progn
-          (setq -p1 (region-beginning))
-          (setq -p2 (region-end)))
+	(progn
+	  (setq -p1 (region-beginning))
+	  (setq -p2 (region-end)))
       (save-excursion
-        (skip-chars-backward "-_A-Za-z0-9")
-        (setq -p1 (point))
-        (right-char)
-        (skip-chars-forward "-_A-Za-z0-9")
-        (setq -p2 (point))))
+	(skip-chars-backward "-_A-Za-z0-9")
+	(setq -p1 (point))
+	(right-char)
+	(skip-chars-forward "-_A-Za-z0-9")
+	(setq -p2 (point))))
     (setq mark-active nil)
     (when (< -p1 (point))
       (goto-char -p1))
@@ -923,26 +1000,3 @@ Version 2015-04-09"
     (clear-abbrev-table minibuffer-mode-abbrev-table))
   (define-abbrev-table 'minibuffer-mode-abbrev-table
     '(("cinit" "" wymux/minibuffer-cinit))))
-
-(defun wymux/exherbo-compile ()
-  ""
-  (interactive)
-  (project-eshell)
-  (eshell/clear)
-  (wymux/exherbo-local-sync)
-  (insert " && ")
-  (insert (format "doas cave resolve -x %s" (car (vc-git-branches))))
-  (eshell-send-input))
-
-(defun wymux/thing-at-point-exheres ()
-  ""
-  (interactive)
-  (let ((p1 nil)
-	(p2 nil))
-    (search-backward "\"")
-    (forward-char 1)
-  (setq p1 (point))
-  (search-forward "\"")
-  (backward-char 1)
-  (setq p2 (point))
-  (message (buffer-substring-no-properties p1 p2))))
