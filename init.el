@@ -1,4 +1,4 @@
-(add-to-list 'load-path "~/Internet/Git/Emacs/compat/")
+(addto-list 'load-path "~/Internet/Git/Emacs/compat/")
 
 (add-to-list 'load-path "~/Internet/Git/Emacs/xelb")
 (add-to-list 'load-path "~/Internet/Git/Emacs/exwm")
