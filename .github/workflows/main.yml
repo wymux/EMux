@@ -1,4 +1,4 @@
-name: Emacs
+name: Test Emacs
 
 on:
   push:
