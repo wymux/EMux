@@ -11,16 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-       emacs_version:
-         - 28.1
-         - 28.2
-         - 29.1
-         - 29.2
+        emacs_version:
+          - 28.1
+          - 28.2
+          - 29.1
+          - 29.2
+
     steps:
+    - uses: actions/checkout@v2
+
     - name: Setup Emacs
       uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}
+
     - name: Load Emacs
       run: |
         emacs --batch --eval '(load-file "init.el")'
