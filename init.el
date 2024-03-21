@@ -10,10 +10,6 @@
 (add-to-list 'load-path "~/Internet/Git/Emacs/f.el/")
 (add-to-list 'load-path "~/Internet/Git/Emacs/editorconfig-emacs/")
 (add-to-list 'load-path "~/Internet/Git/Emacs/nvm.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/with-editor/lisp/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/dash.el/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/transient/lisp/")
-(add-to-list 'load-path "~/Internet/Git/Emacs/magit/lisp/")
 (add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
 
 (setq no-littering-etc-directory
@@ -33,7 +29,6 @@
 (require 'emms-setup)
 (require 'package)
 (require 'transient)
-(require 'magit)
 (require 'wdired)
 (require 'exwm)
 (require 'exwm-config)
@@ -69,7 +64,7 @@
   (setq browse-url-chromium-arguments '("--disable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-light" "--new-tab" ))
   (modify-all-frames-parameters '((background-color . "white")
 				  (foreground-color . "black")))
-  (set-face-attribute 'default nil :family "Berkeley Mono" :height 130))
+  (set-face-attribute 'default nil :family "Berkeley Mono" :height 140))
 
 (defun wymux/select-theme ()
   ""
@@ -86,7 +81,6 @@
     (setq browse-url-chromium-arguments '("--enable-features=WebContentsForceDark" "--user-data-dir=/home/wymux/.config/chromium/wymux-dark" ))))
 
 (wymux/select-theme)
-(wymux/bright-theme)
 (wymux/chromium-theme)
 (global-font-lock-mode -1)
 (electric-pair-mode 1)
@@ -150,14 +144,35 @@
 	  (wymux/chromium-light)
 	(wymux/chromium-dark)))))
 
-(defun wymux/mpv ()
+(defun wymux/mpv (&optional media-path)
   "Load video."
   (interactive)
   (let ((dir "~/Media/Video")
 	(reg "webm"))
-    (start-process "mpv" "mpv" "mpv" (expand-file-name
-				      (completing-read "Media: "
-						       (directory-files-recursively dir reg))))))
+    (if (not media-path)
+	(start-process "mpv" "mpv" "mpv" (expand-file-name
+					  (completing-read "Media: "
+							   (directory-files-recursively dir reg))))
+      (start-process "mpv" "mpv" "mpv" media-path))))
+
+(defun wymux/yt-dlp (url)
+  "Download and view video with mpv based on URL.
+If URL is not provided, it will be retrieved from the kill ring."
+  (interactive (list (if (equal current-prefix-arg '(4))
+                         (read-string "Enter the video URL: ")
+                       (current-kill 0))))
+  (let* ((file (string-trim (shell-command-to-string
+                             (format "yt-dlp --get-filename %S 2> /dev/null" url))))
+         (path (expand-file-name (concat "~/Media/Video/Rewatch/" file))))
+    (if (file-exists-p path)
+        (wymux/mpv path)
+      (progn
+	(when (y-or-n-p (format "Download video '%s' to %s? " file path))
+	  (let ((default-directory temporary-file-directory))
+            (async-shell-command (format "yt-dlp -o %S %S" path url)))
+	  (if (file-exists-p path)
+	  (wymux/mpv path))
+        (error "Video download failed: %s" path))))))
 
 (defun wymux/prismlauncher ()
   ""
@@ -206,8 +221,10 @@
 	([?\s-e] . emms)
 	([?\s-s] . mh-smail)
 	([?\s-d] . delete-frame)
+	([?\s-m] . wymux/mpv)
 	([?\s-u] . ffap)
 	([?\s-o] . other-frame)
+	([f9] . wymux/yt-dlp)
 	([f10] . switch-to-buffer)
 	([f11] . wymux/scrot-all)
 	([f12] . wymux/chromium)
@@ -360,6 +377,7 @@
       (" oa" . isearch-forward-symbol-at-point)
       (" oe" . isearch-forward-symbol)
       (" ou" . isearch-forword-word)
+      (" ow" . revert-buffer-quick)
 
       (" yt" . xref-find-definitions)
       (" ys" . xref-pop-marker-stack)
@@ -388,6 +406,9 @@
       (" adh" . expand-jump-top-previous-slot)
       (" ads" . expand-jump-to-next-slot)
       (" ad'" . abbrev-prefix-mark)
+
+      (" .e" . project-find-file)
+      (" .a" . project-eshell)
 
       (" aj" . insert-char)
 
@@ -498,13 +519,12 @@
       (" tx" . xah-cut-text-in-quote)
       (" tt" . repeat)
       (" te" . delete-matching-lines)
-
       (" tm" . xah-next-window-or-frame)
       (" t-" . xah-title-case-region-or-line)
       (" t'" . delete-duplicate-lines)
 
       (" e" . switch-to-buffer)
-      (" f" . universal-arg)
+      (" f" . universal-argument)
 
       (" mDEL" . xah-delete-current-file-make-backup)
       (" mo" . eval-buffer)
@@ -515,7 +535,7 @@
       (" mx" . save-buffers-kill-terminal)
       (" mm" . delete-frame)
       (" mj" . xah-run-current-file)
-
+      
       (" -" . xah-toggle-previous-letter-case)
       (" '" . xah-show-kill-ring)
 
@@ -585,15 +605,16 @@
        ("m" . xah-next-window-or-frame)
        ("-" . xah-toggle-letter-case)
        ("\'" . set-mark-command)
-       ("p" . xah-goto-matching-bracket))
-
+       ("p" . xah-goto-matching-bracket)
+       ("\\" . upcase-word))
+       
     (modaled-define-substate "exheres")
     (modaled-define-keys
       :substates '("exheres")
       :bind
-      '((" u" . wymux/exherbo-rename)
-	(" e" . wymux/eshell-ccd-other-window)
-	(" x" . wymux/exherbo-compile)))
+      '(("/u" . wymux/exherbo-rename)
+	("/e" . wymux/eshell-ccd-other-window)
+	("/x" . wymux/exherbo-compile)))
 
     (modaled-enable-substate-on-state-change
       "exheres"
@@ -626,8 +647,8 @@
     (modaled-define-keys
       :substates '("eglot-engram")
       :bind
-      '((" e" . eglot-code-actions)
-	(" t" . flymake-goto-next-error)))
+      '(("/e" . eglot-code-actions)
+	("/t" . flymake-goto-next-error)))
 
     (modaled-enable-substate-on-state-change
       "eglot-engram"
@@ -648,10 +669,9 @@
 (modaled-define-default-state
   '("insert" wdired-mode eshell-mode eat-eshell-mode compilation-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
-    magit-status-mode git-commit-mode backtrace-mode info-mode help-mode
-    magit-diff-mode exwm-mode gnus-summary-mode gnus-group-mode-hook
-    text-mode magit-refs-mode magit-select-mode magit-log-mode
-    gnus-group-mode)
+    git-commit-mode backtrace-mode info-mode help-mode
+    exwm-mode gnus-summary-mode gnus-group-mode-hook
+    text-mode gnus-group-mode)
   '("normal"))
 
 (defun wymux/modaled-insert-state ()
@@ -682,9 +702,9 @@
 (package-initialize)
 
 (add-hook 'typescript-ts-mode-hook 'prettier-mode)
-(add-hook 'web-mode-hook 'prettier-mode)
-
 (add-hook 'typescript-ts-mode-hook 'emmet2-mode)
+(add-hook 'web-mode-hook 'prettier-mode)
+(add-hook 'web-mode-hook 'emmet2-mode)
 
 (load-file "~/Internet/Git/Emacs/eacl/eacl.el")
 (load-file "~/Internet/Git/Emacs/emacs-websocket/websocket.el")
@@ -743,7 +763,7 @@
 		    (completing-read "Doc: " (directory-files-recursively dir reg))))))
 
 (customize-set-variable 'exwm-manage-configurations 
-			'(((member exwm-class-name '("llpp" "Chromium-browser"))
+			'(((member exwm-class-name '("llpp" "Chromium-browser" "firefox"))
 			   char-mode t)))
 
 (defun wymux/insert-gpl ()
@@ -889,9 +909,10 @@
 
 (defun xah-search-current-word ()
   "Call `isearch' on current word or text selection.
-  “word” here is A to Z, a to z, and hyphen 「-」 and underline 「_」, independent of syntax table.
-  URL `http://ergoemacs.org/emacs/modernization_isearch.html'
-  Version 2015-04-09"
+“word” here is A to Z, a to z, and hyphen 「-」
+and underline 「_」, independent of syntax table.
+URL `http://ergoemacs.org/emacs/modernization_isearch.html'
+Version 2015-04-09"
   (interactive)
   (let ( -p1 -p2 )
     (if (use-region-p)
@@ -1000,3 +1021,10 @@
     (clear-abbrev-table minibuffer-mode-abbrev-table))
   (define-abbrev-table 'minibuffer-mode-abbrev-table
     '(("cinit" "" wymux/minibuffer-cinit))))
+
+(customize-set-variable 'org-directory "~/Media/Document/Reference/Org/")
+(customize-set-variable 'org-agenda-files   (list "~/Media/Document/Reference/Org"))
+(customize-set-variable 'org-log-done 'time)
+
+(add-to-list 'auto-mode-alist
+	     '("\\.yml" . yaml-ts-mode))
