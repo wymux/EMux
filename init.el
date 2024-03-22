@@ -10,6 +10,10 @@
 (add-to-list 'load-path "~/Internet/Git/Emacs/f.el/")
 (add-to-list 'load-path "~/Internet/Git/Emacs/editorconfig-emacs/")
 (add-to-list 'load-path "~/Internet/Git/Emacs/nvm.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/with-editor/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/dash.el/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/transient/lisp/")
+(add-to-list 'load-path "~/Internet/Git/Emacs/magit/lisp/")
 (add-to-list 'load-path "~/Internet/Git/Utility/emacs-pcre")
 
 (setq no-littering-etc-directory
@@ -29,6 +33,7 @@
 (require 'emms-setup)
 (require 'package)
 (require 'transient)
+(require 'magit)
 (require 'wdired)
 (require 'exwm)
 (require 'exwm-config)
@@ -557,6 +562,7 @@ If URL is not provided, it will be retrieved from the kill ring."
       (" @5" . vc-revision-other-window) ; ~
       (" @6" . vc-switch-backend)        ; b
       (" @7" . vc-update-change-log)     ; a
+      (" .i" . magit-status)
 
        ("b" . xah-reformat-lines)
        ("y" . xah-shrink-whitespaces)
@@ -669,7 +675,7 @@ If URL is not provided, it will be retrieved from the kill ring."
 (modaled-define-default-state
   '("insert" wdired-mode eshell-mode eat-eshell-mode compilation-mode
     debugger-mode mh-folder-mode calendar-mode emms-playlist-mode
-    git-commit-mode backtrace-mode info-mode help-mode
+    git-commit-mode backtrace-mode info-mode help-mode magit-status
     exwm-mode gnus-summary-mode gnus-group-mode-hook
     text-mode gnus-group-mode)
   '("normal"))
